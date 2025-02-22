@@ -1,0 +1,56 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+# The number of classes in the dataset
+nc: 25
+
+names:
+  0: road
+  1: drivable fallback
+  2: motorcycle
+  3: sky
+  4: curb
+  5: building
+  6: vegetation
+  7: obs-str-bar-fallback
+  8: billboard
+  9: autorickshaw
+  10: pole
+  11: car
+  12: truck
+  13: person
+  14: animal
+  15: rider
+  16: vehicle fallback
+  17: non-drivable fallback
+  18: wall
+  19: fallback background
+  20: fence
+  21: traffic sign
+  22: guard rail
+  23: polegroup
+  24: bus
+
+backbone:
+  [ [ -1, 1, Conv, [ 3, 64, 6, 2, 2 ] ],  # Initial Conv layer
+    [ -1, 3, BottleneckCSP, [ 64, 128, 3 ] ],  # Add more bottlenecks
+    [ -1, 9, BottleneckCSP, [ 128, 256, 3 ] ],  # More layers for depth
+    [ -1, 1, SPP, [ 256, 512, [ 5, 9, 13 ] ] ],  # SPP for robust feature extraction
+    [ -1, 6, BottleneckCSP, [ 512, 1024, 3 ] ],  # Increase bottlenecks further
+    [ -1, 3, BottleneckCSP, [ 1024, 1024, 3 ] ],  # Adding more layers for depth
+    [ -1, 3, BottleneckCSP, [ 1024, 1024, 3 ] ],  # Another set of bottlenecks for depth
+    [ -1, 3, BottleneckCSP, [ 1024, 1024, 3 ] ] ]  # More layers to deepen the backbone
+
+neck:
+  [ [ -1, 3, PAN, [ 1024, 512, 3 ] ],  # Deeper PANet neck
+    [ -1, 6, BottleneckCSP, [ 512, 256, 3 ] ],  # More CSP bottlenecks for depth
+    [ -1, 3, BottleneckCSP, [ 256, 128, 3 ] ],  # Another layer of bottlenecks
+    [ -1, 3, BottleneckCSP, [ 128, 128, 3 ] ] ]  # More layers for a deeper neck
+
+head:
+  [ [ -1, 1, Conv, [ 128, 256, 1, 1, 1 ] ],  # Additional Conv layer
+    [ -1, 3, BottleneckCSP, [ 256, 512, 3 ] ],  # Deeper detection head
+    [ -1, 1, YOLOHead, [ 512, nc ] ],  # YOLO detection head
+    [ -1, 3, BottleneckCSP, [ 512, 512, 3 ] ],  # Additional layers to enhance head
+    [ -1, 1, YOLOHead, [ 512, nc ] ] ]

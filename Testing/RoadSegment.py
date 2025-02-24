@@ -3,7 +3,7 @@ import random
 import cv2
 import numpy as np
 
-model = YOLO("yolov8Road_n-seg1.pt")
+model = YOLO("../Model/GeneralPreTrained/yolov8Road_n-seg1.pt")
 img = cv2.imread("/DataSet/idd20kII/Img_/train/201/frame0029_leftImg8bit.jpg")
 
 # if you want all classes

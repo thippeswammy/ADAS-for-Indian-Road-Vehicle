@@ -111,7 +111,7 @@ def run_yolo_segmentation_on_video(model, video_path, conf=0.5, display=True, sa
     cv2.destroyAllWindows()
 
 
-model_path = r'C:\project\model\roadSeg.pt'
+model_path = f'../Model/Road-seg/weights/best.pt'
 video_path = r'C:\project\video'
 model = YOLO(model_path)
 if torch.cuda.is_available():

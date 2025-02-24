@@ -147,8 +147,8 @@ def run_model_thread(model_paths, video_path, conf=0.5, display=False, save_path
 
 
 if __name__ == "__main__":
-    model1_path = r'F:\RunningProjects\YOLO_Model\Training\runs\segment\RoadSegmentationForMyDataset9\weights\best.pt'
-    model2_path = r'yolo11x-seg.pt'
+    model1_path = f'../Model/Road-seg/weights/best.pt'
+    model2_path = r'../Model/YoloPreTrained/yolo11x-seg.pt'
     video_path = r"D:\downloadFiles\front_3\video27.mp4"
     ''' 4320p (8k): 7680x4320
         2160p (4K): 3840x2160

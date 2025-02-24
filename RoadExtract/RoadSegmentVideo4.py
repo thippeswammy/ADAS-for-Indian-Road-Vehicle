@@ -106,7 +106,7 @@ def run_yolo_segmentation_on_video(model, video_path, conf=0.5, display=True, sa
     cv2.destroyAllWindows()
 
 
-model_path = "/Training/runs1\segment\RoadSegmentation\weights\\best.pt"
+model_path = f'../Model/Road-seg/weights/best.pt'
 model = YOLO(model_path)
 cv2.namedWindow("YOLO Segmentation", cv2.WINDOW_NORMAL)
 for i in range(7, 19):

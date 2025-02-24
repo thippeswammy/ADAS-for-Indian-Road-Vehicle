@@ -122,8 +122,8 @@ def run_model_thread(model_paths, video_path, conf=0.5, display=False, save_path
 
 
 if __name__ == "__main__":
-    model1_path = r'F:\RunningProjects\YOLO_Model\Training\runs\segment\RoadSegmentationForMyDataset9\weights\best.pt'
-    model2_path = r'yolo11x-seg.pt'
+    model1_path = f'../Model/Road-seg/weights/best.pt'
+    model2_path = r'../Model/YoloPreTrained/yolo11x-seg.pt'
     for i in range(1, 2):
         print('=>' * 10, f"Processing video {i}", '<=' * 10)
         try:
@@ -138,6 +138,7 @@ if __name__ == "__main__":
             print(f"Processing time: {elapsed_time:.2f} seconds")
             hours, remainder = divmod(elapsed_time, 3600)
             minutes, seconds = divmod(remainder, 60)
+
             print(f"Processing time: {int(hours)} hr, {int(minutes)} min, {seconds:.2f} sec")
             print(f"FPS: {total_frames / elapsed_time:.2f}")
             print(f"FPS: {total_frames / elapsed_time:.2f}")

@@ -103,7 +103,7 @@ def run_yolo_segmentation_on_video(model, video_path, conf=0.5, display=True, sa
 
 
 for model_number in range(18, 19):
-    model_path = f"F:\RunningProjects\YOLO_Model\Training\\runs\segment\RoadSegmentationForMyDataset3\weights\\best.pt"
+    model_path = f'../Model/Road-seg/weights/best.pt'
     model = YOLO(model_path)
     cv2.namedWindow("YOLO Segmentation", cv2.WINDOW_NORMAL)
     cv2.namedWindow("YOLO Segmentation frameS", cv2.WINDOW_NORMAL)

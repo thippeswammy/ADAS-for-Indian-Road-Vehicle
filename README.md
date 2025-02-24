@@ -64,7 +64,14 @@ To set up the project locally, follow these steps:
    ```
 
 3. **Download Pretrained Weights**:
-   Download the YOLOv8-Seg pretrained weights and place them in the `weights/` directory.
+   You can download the **YOLOv8-Seg pretrained model** from the link below:
+   📥 [Download Model Weights](https://drive.google.com/file/d/1jWOH5aDEPbf-oOUqRSweqnsfHgOfhyfb/view?usp=sharing)
+   
+   After downloading, place the file in the `weights/` directory:
+   ```
+   weights/
+   ├── yolov8l-seg.pt  # Downloaded weights
+   ```
 
 4. **Prepare Dataset**:
    Ensure the dataset is organized in the following structure:
@@ -114,7 +121,6 @@ python superpixel.py --method majority_pixel --n_segments 500
 #### Sample Output Video
 https://github.com/user-attachments/assets/c799c248-3dcf-4942-b0d6-d8d7b0c3a33e
 
-
 📹 **Watch the full demo video**: [Click here to view](https://drive.google.com/file/d/112LswURMs_aveyLxTfg6pWAl1nmTxpx8/view?usp=drive_link)
 ---
 
@@ -144,4 +150,3 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 For questions or feedback, please contact:
 - **Thippeswamy** - [thippeswamy636408@gmail.com](mailto:thippeswamy636408@gmail.com)
 - **GitHub**: [thippeswammy](https://github.com/thippeswammy)
-

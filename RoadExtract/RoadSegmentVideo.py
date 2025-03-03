@@ -1,17 +1,18 @@
+import time
+
 import cv2
 import numpy as np
 from ultralytics import YOLO
 
 # Define your class IDs and corresponding colors
 vehicle_classes = [11, 12, 24, 16]  # Example vehicle class IDs: car, truck, bus, vehicle fallback
-
 colors = [
-    (128, 64, 128),  # 0: road (purple-gray)
     (0, 255, 0),  # 1: drivable fallback (bright green)
-    (255, 0, 0),  # 2: motorcycle (bright red)
-    (135, 206, 235),  # 3: sky (light sky blue)
-    (255, 255, 255),  # 4: curb (white)
-    (128, 128, 128),  # 5: building (gray)qq
+    (128, 64, 128),  # 0: road (purple-gray)
+    (255, 255, 255),  # 2: motorcycle (bright red)
+    (255, 255, 255),  # 3: sky (light sky blue)
+    (255, 255, 0),  # 4: curb (white)
+    (128, 128, 128),  # 5: building (gray)
     (34, 139, 34),  # 6: vegetation (forest green)
     (255, 140, 0),  # 7: obs-str-bar-fallback (dark orange)
     (255, 228, 196),  # 8: billboard (bisque)
@@ -35,19 +36,14 @@ colors = [
 
 
 def safe_area(overlay, vehiclePos):
-    overlay1 = overlay.copy()
-    overlay2 = overlay.copy()
     for box in vehiclePos:
         blx, by, brx = box[0], box[3], box[2]
         mask_x = (blx <= np.arange(overlay.shape[1])) & (np.arange(overlay.shape[1]) <= brx)
         mask_y = (np.arange(overlay.shape[0]) <= by)
         mask = np.outer(mask_y, mask_x)
-
         color_mask = (overlay == (128, 64, 128)).all(axis=-1) & mask
-        overlay1[mask] = (255, 255, 255)
-        overlay2[color_mask] = (255, 255, 255)
-
-    return overlay1.astype(np.uint8), overlay2.astype(np.uint8)
+        overlay[color_mask] = (255, 255, 255)
+    return overlay.astype(np.uint8)
 
 
 def run_yolo_segmentation_on_video(model, video_path, conf=0.5, display=True, save_path=None, transparency=0.5):
@@ -55,15 +51,21 @@ def run_yolo_segmentation_on_video(model, video_path, conf=0.5, display=True, sa
     frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     fps = cap.get(cv2.CAP_PROP_FPS)
-
+    total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    print("Total frames =>", total_frames)
     if save_path:
         out = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (frame_width, frame_height))
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
+        if frame is None:
+            print("Frame is None.")
+            break
+
         results = model.predict(frame, conf=conf)
         overlay = frame.copy()
+
         for result in results:
             vehiclePos = []
             if result.masks is not None:
@@ -87,28 +89,53 @@ def run_yolo_segmentation_on_video(model, video_path, conf=0.5, display=True, sa
                             except cv2.error as e:
                                 print(f"Failed to draw polygon for class {cls_id}: {e}")
 
-        overlayS, overlay = safe_area(overlay, vehiclePos)
-        frameS = cv2.addWeighted(overlayS, transparency, frame, 1 - transparency, 0)
         frame = cv2.addWeighted(overlay, transparency, frame, 1 - transparency, 0)
+        if save_path:
+            out.write(frame)
+        frame = cv2.resize(frame, (1080, 720))
 
         if display:
-            cv2.imshow("YOLO Segmentation frameS", frameS)
             cv2.imshow("YOLO Segmentation", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
-
-        if save_path:
-            out.write(frame)
 
     cap.release()
     if save_path:
         out.release()
     cv2.destroyAllWindows()
+    return total_frames
 
 
 model_path = f'../Model/RoadSeg/weights/best.pt'
-model = YOLO(model_path)
+model = YOLO(model_path).to('cuda')
+# .to("cpu"))
+# cuda = 81.9609386920929
+# cpu = 74.12958312034607
 cv2.namedWindow("YOLO Segmentation", cv2.WINDOW_NORMAL)
 for i in range(15, 16):
-    run_yolo_segmentation_on_video(model=model, conf=0.7, display=True, transparency=0.5,
-                                   video_path=f"D:\downloadFiles\\front_3\\video{i}.mp4")
+    print('=>' * 10, f"Processing video {i}", '<=' * 10)
+    try:
+        start_time = time.process_time()
+        total_frames = run_yolo_segmentation_on_video(
+            video_path=f"D:\\downloadFiles\\front_3\\video{i}.mp4",
+            conf=0.75,
+            model=model,
+            display=True,
+            save_path=None,
+            transparency=0.5,
+        )
+        elapsed_time = time.process_time() - start_time
+        print(f"\n\n\n\nProcessing time: {elapsed_time:.2f} seconds")
+        # Convert elapsed time to hours, minutes, seconds
+        hours, remainder = divmod(elapsed_time, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        print(f"Processing time: {int(hours)} hr, {int(minutes)} min, {seconds:.2f} sec")
+        print(f"FPS: {total_frames / elapsed_time:.2f}")
+        print(f"FPS: {total_frames / elapsed_time:.2f}")
+    except FileNotFoundError as fnf_error:
+        print(f"Video {i} not found: {fnf_error}")
+    except Exception as e:
+        print(f"Error processing video {i}: {e}")
+    else:
+        print(f"Skipping video {i}, not in the list.")

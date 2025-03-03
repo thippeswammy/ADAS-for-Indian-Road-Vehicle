@@ -60,12 +60,18 @@ class ImageAugmentations:
 class YoloProcessor:
     """Class to handle YOLO data processing, including augmentation and label management."""
 
-    def __init__(self, source_dir, train_split=0.73, val_split=0.17, test_split=0.1, factTimes=7,
+    def __init__(self, source_dir, train_split=0.8, val_split=0.15, test_split=0.05, factTimes=7,
                  class_to_id=None, color_to_label='', dataset_saving_working_dir='', folder_name='', class_names='',
                  mask_type_ext='.jpeg', mask_foulder_name='masks', FromDataType='', ToDataTypeFormate=''):
-        fullPath, dataset_folder = create_yolo_folders.create_yolo_folder_structure(folder_name=folder_name,
-                                                                                    main_path=dataset_saving_working_dir,
-                                                                                    num_classes=class_names)
+        try:
+            fullPath, dataset_folder = create_yolo_folders.create_yolo_folder_structure(folder_name=folder_name,
+                                                                                        main_path=dataset_saving_working_dir,
+                                                                                        num_classes=class_names)
+            print(f"Dataset folder structure created at: {fullPath}")
+        except Exception as e:
+            logging.error(f"Error creating YOLO folder structure: {e}")
+            raise
+
         self.train_image_count = self.val_image_count = self.test_image_count = 0
         self.train_save_path = os.path.join(fullPath, 'train')
         self.val_save_path = os.path.join(fullPath, 'valid')
@@ -85,22 +91,26 @@ class YoloProcessor:
         self.main_path = dataset_saving_working_dir
         self.factTimes = factTimes
 
+        if not os.path.exists(self.source_dir):
+            logging.error(f"Source directory '{self.source_dir}' does not exist.")
+            raise FileNotFoundError(f"Source directory '{self.source_dir}' not found.")
+
     def distribute_files_with_threads(self):
         """Distribute files into training, validation, and test sets using multithreading."""
         image_paths = self.collect_image_paths()
-        # random.shuffle(image_paths)
+        if not image_paths:
+            logging.error("No image files were found in the source directory.")
+            return
 
         total_files = len(image_paths * self.factTimes)
-        self.train_image_count = int(total_files * self.train_split)
+        if total_files / 10 > 10000:
+            self.val_split = 10000 / total_files
+            self.test_split = 1000 / total_files
         self.test_image_count = int(total_files * self.test_split)
-        self.val_image_count = total_files - self.train_image_count - self.test_image_count
+        self.val_image_count = int(total_files * self.val_split)
+        self.train_image_count = total_files - self.test_image_count - self.val_image_count
 
         file_infos = [(os.path.basename(file_path)[:-4], file_path) for file_path in image_paths]
-
-        # with tqdm(total=total_files, desc="Processing Images") as pbar:
-        #     for file_info1 in file_infos:
-        #         self.process_single_file(file_info1, self.factTimes)
-        #         pbar.update(self.factTimes)
 
         with tqdm(total=total_files, desc="Processing Images") as pbar:
             with ThreadPoolExecutor(max_workers=(os.cpu_count() - 8)) as executor:
@@ -113,6 +123,11 @@ class YoloProcessor:
                         logging.error(f"Exception during processing: {e}")
                     pbar.update(self.factTimes)
 
+        # with tqdm(total=total_files, desc="Processing Images") as pbar:
+        #     for file_info1 in file_infos:
+        #         self.process_single_file(file_info1, self.factTimes)
+        #         pbar.update(self.factTimes)
+
     def collect_image_paths(self):
         """Collect all image file paths from the source directory."""
         image_paths = []
@@ -120,12 +135,15 @@ class YoloProcessor:
             for filename in files:
                 if filename.lower().endswith(('.jpg', '.png', '.jpeg')):
                     image_paths.append(os.path.join(root, filename))
+        logging.info(f"Found {len(image_paths)} images in the source directory.")
         return image_paths
 
     def process_single_file(self, file_info, Times):
         file_basename, file_path = file_info
         try:
             self.process_and_save(file_basename, file_path, Times)
+        except FileNotFoundError:
+            logging.error(f"File not found: {file_path}")
         except Exception as e:
             logging.error(f"Error processing file {file_basename}: {e}")
 
@@ -137,7 +155,10 @@ class YoloProcessor:
 
     def process_and_save(self, file_name, image_source_path, Times):
         """Process and save images and their corresponding labels."""
-        image_source_path = os.path.normpath(image_source_path)
+        if not os.path.exists(image_source_path):
+            logging.warning(f"Image file not found: {image_source_path}")
+            return
+
         label_source_path = self.get_label_path(image_source_path)
         if os.path.exists(label_source_path):
             yolo_polygons_points_txt = ''
@@ -148,7 +169,6 @@ class YoloProcessor:
                 if save_img_path and save_label_path:
                     augmented_img = self.apply_augmentations(image_source_path, i)
                     if augmented_img is not None:
-                        # Convert tensor to numpy and save the image
                         try:
                             image_np = np.array(augmented_img.permute(1, 2, 0).cpu().numpy() * 255, dtype=np.uint8)
                             image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
@@ -157,7 +177,7 @@ class YoloProcessor:
                         except Exception as e:
                             logging.error(f"Error saving image {save_img_path}: {e}")
         else:
-            logging.error(f"The labeled files is not found at the:{label_source_path}")
+            logging.warning(f"Label file not found for image: {image_source_path}")
 
     def get_destination_paths(self, file_name, num):
         """Get the destination paths for saving images and labels."""
@@ -277,8 +297,11 @@ if __name__ == '__main__':
     }
     source_dir = r'I:\thippe\Working1\images'
     dataset_saving_working_dir = r'F:\RunningProjects\YOLO_Model\DataSet\data'
-    processor = YoloProcessor(source_dir=source_dir, class_to_id=class_to_id, color_to_label=color_to_id,
-                              dataset_saving_working_dir=dataset_saving_working_dir, factTimes=1,
-                              folder_name='road2', class_names=list(class_to_id.keys()),
-                              mask_type_ext='.png', FromDataType='', ToDataTypeFormate='')
-    processor.distribute_files_with_threads()
+    try:
+        processor = YoloProcessor(source_dir=source_dir, class_to_id=class_to_id, color_to_label=color_to_id,
+                                  dataset_saving_working_dir=dataset_saving_working_dir, factTimes=1,
+                                  folder_name='road2', class_names=list(class_to_id.keys()),
+                                  mask_type_ext='.png', FromDataType='', ToDataTypeFormate='')
+        processor.distribute_files_with_threads()
+    except Exception as e:
+        logging.error(f"Critical error: {e}")

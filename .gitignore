@@ -1,0 +1,7 @@
+/Model/GeneralPreTrained/bestZebraCrossing.pt
+/Model/YoloPreTrained/yolo11s-seg.pt
+/Model/YoloPreTrained/yolo11x-seg.pt
+/Model/GeneralPreTrained/yolov8Road_n-seg.pt
+/Model/GeneralPreTrained/yolov8Road_n-seg1.pt
+/Model/GeneralPreTrained/yolov8Road_n-seg2.pt
+/Model/RoadSeg/weights/best.pt

@@ -74,18 +74,18 @@ def main():
             mask_colored[np.where((mask_colored == [255, 255, 255]).all(axis=2))] = [0, 0, 255]
 
             # Blend the mask with the original image (alpha=0.5 for transparency)
-            overlayed_image = cv2.addWeighted(img, 1, mask_colored, 0.5, 0)
+            overlay_image = cv2.addWeighted(img, 1, mask_colored, 0.5, 0)
 
             # Save the overlayed image
             output_image_path = os.path.join(output_dir, f'{base_filename}_overlay.jpg')
-            cv2.imwrite(output_image_path, overlayed_image)
+            cv2.imwrite(output_image_path, overlay_image)
 
     print(f"Finished processing images.")
 
 
-images_dir = r'F:\RunningProjects\ADAS-for-Indian-Road-Vehicle\Dataset-creator\yolo_dataset_processor\dataset_saving_working_dir\road\train\images'
-labels_dir = r'F:\RunningProjects\ADAS-for-Indian-Road-Vehicle\Dataset-creator\yolo_dataset_processor\dataset_saving_working_dir\road\train\labels'
-output_dir = r'F:\RunningProjects\ADAS-for-Indian-Road-Vehicle\Dataset-creator\yolo_dataset_processor\dataset_saving_working_dir\road\train\masks'
+images_dir = r'../Dataset-creator/yolo_dataset_processor/dataset_saving_working_dir/road/train/images'
+labels_dir = r'../Dataset-creator/yolo_dataset_processor/dataset_saving_working_dir/road/train/labels'
+output_dir = r'../Dataset-creator/yolo_dataset_processor/dataset_saving_working_dir/road/train/masks'
 
 if __name__ == "__main__":
     main()

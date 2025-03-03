@@ -139,13 +139,6 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 ---
 
-## Acknowledgements
-- **YOLOv8**: Ultralytics for the YOLOv8 model.
-- **SAM2**: Meta AI for the Segment Anything Model.
-- **Dataset Contributors**: All contributors who helped in data collection and annotation.
-
----
-
 ## Contact
 For questions or feedback, please contact:
 - **Thippeswamy** - [thippeswamy636408@gmail.com](mailto:thippeswamy636408@gmail.com)

@@ -76,6 +76,11 @@ def run_yolo_segmentation_on_video(models, video_path, conf=0.5, display=False, 
                                (frame_width, frame_height))
         out5 = cv2.VideoWriter(save_path + "videoMaskBinarySquare" + str(i) + ".mp4", cv2.VideoWriter_fourcc(*'mp4v'),
                                fps, (frame_width, frame_height))
+    if save_path or save_main_video:
+        if not save_path.endswith(('.mp4', '.avi')):
+            save_path += f"\\outputVideo{i}.mp4"  # Ensure valid filename
+        out6 = cv2.VideoWriter(save_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (frame_width, frame_height))
+
     paused = False
     NumberPressed = 1
     while cap.isOpened():
@@ -92,13 +97,13 @@ def run_yolo_segmentation_on_video(models, video_path, conf=0.5, display=False, 
             for count, model in enumerate(models):
                 results = model.predict(frame, conf=conf, imgsz=(input_size[0], input_size[1]))
                 for result in results:
-                    vehiclePos = []
+                    vehicle_positions = []
                     if result.masks is not None:
                         for mask, box in zip(result.masks.xy, result.boxes):
                             cls_id = int(box.cls[0])
                             if cls_id in vehicle_classes and cls_id < len(colors) and count >= len(models) - 1:
                                 x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
-                                vehiclePos.append([x_min, y_min, x_max, y_max])
+                                vehicle_positions.append([x_min, y_min, x_max, y_max])
                                 cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colors[cls_id], 2)
                             if (cls_id == 0 and count != len(models) - 1) or wantObjectMasks:
                                 points = np.int32(mask).reshape((-1, 1, 2))
@@ -114,15 +119,21 @@ def run_yolo_segmentation_on_video(models, video_path, conf=0.5, display=False, 
                 out.write(cv2.addWeighted(combined_overlay, transparency, frame, 1 - transparency, 0))
                 out2.write(combined_overlay)
                 out4.write(convert_green_to_binary(combined_overlay))
-            combined_overlay = safe_area(combined_overlay, vehiclePos)
+            combined_overlay = safe_area(combined_overlay, vehicle_positions)
+            # Create a mask for non-black areas in the overlay
+            mask = np.any(combined_overlay != 0, axis=-1, keepdims=True)
+            # Blend only the segmented areas while keeping the original frame for the rest
+            Blend = np.where(mask, cv2.addWeighted(combined_overlay, transparency, frame, 1 - transparency, 0), frame)
+
             frame = cv2.addWeighted(combined_overlay, transparency, frame, 1 - transparency, 0)
             if save_path:
                 out1.write(frame)
                 out3.write(combined_overlay)
                 out5.write(convert_green_to_binary(combined_overlay))
-
+            if save_path or save_main_video:
+                out6.write(Blend)
         if display:
-            cv2.imshow("YOLO Combined Segmentation", frame)
+            cv2.imshow("Road Vehicle Segmentation", frame)
             key = cv2.waitKey(1)
             if key == ord('p'):  # Pause/unpause when "P" is pressed
                 paused = not paused
@@ -134,6 +145,13 @@ def run_yolo_segmentation_on_video(models, video_path, conf=0.5, display=False, 
     cap.release()
     if save_path:
         out.release()
+        out1.release()
+        out2.release()
+        out3.release()
+        out4.release()
+        out5.release()
+    if save_path or save_main_video:
+        out6.release()
     cv2.destroyAllWindows()
     return total_frames
 
@@ -147,33 +165,22 @@ def run_model_thread(model_paths, video_path, conf=0.5, display=False, save_path
 
 
 if __name__ == "__main__":
-    model1_path = f'../Model/Road-seg/weights/best.pt'
+    resolutionList = [[854, 480]]
+    model1_path = f'../Model/RoadSeg/weights/best.pt'
     model2_path = r'../Model/YoloPreTrained/yolo11x-seg.pt'
-    video_path = r"D:\downloadFiles\front_3\video27.mp4"
-    ''' 4320p (8k): 7680x4320
-        2160p (4K): 3840x2160
-        1440p (2k): 2560x1440
-        1080p (HD): 1920x1080
-        720p (HD): 1280x720
-        480p (SD): 854x480
-        360p (SD): 640x360  [2560, 1440], [3840, 2160]
-        240p (SD): 426x240'''
-    # resolutionList = [[426, 240], [640, 360], [854, 480], [1280, 720], [1920, 1080]]
-    resolutionList = [[480, 480]]
-    log_file_path = r"D:\downloadFiles\front_3\outputs\busVideo\processing_log.txt"
+    log_file_path = r"D:\downloadFiles\front_3\processing_log.txt"
+    # resolutionList = [[854, 480],[426, 240], [640, 360], [854, 480], [1280, 720], [1920, 1080]]
     with open(log_file_path, 'a') as log_file:
-        for i in range(55, 56):
+        for i in range(15, 16):
             print('=>' * 10, f"Processing video {i}", '<=' * 10)
             try:
                 for size in resolutionList:
                     start_time = time.time()
-                    input_size = size
                     total_frames = run_model_thread(
                         model_paths=[model1_path, model2_path], conf=0.75,
-                        display=True, transparency=0.5, input_size=input_size,
-                        # save_path=f"D:\\downloadFiles\\front_3\\outputs\\video{i}_{input_size[0]}_{input_size[1]}.mp4",
-                        # save_path=r"D:\downloadFiles\front_3\outputs\busVideo\\",
+                        display=True, transparency=0.5, input_size=size,
                         video_path=f"D:\\downloadFiles\\front_3\\video{i}.mp4",
+                        # save_path=f"D:\\downloadFiles\\front_3\\outputs\\video{i}_{size[0]}_{size[1]}.mp4"
                     )
                     elapsed_time = time.time() - start_time
                     print(f"Processing time: {elapsed_time:.2f} seconds")
@@ -182,7 +189,7 @@ if __name__ == "__main__":
                     print(f"Processing time: {int(hours)} hr, {int(minutes)} min, {seconds:.2f} sec")
                     print(f"FPS: {total_frames / elapsed_time:.2f}")
                     fps = total_frames / elapsed_time
-                    log_entry = (f"Resolution: {input_size[0]}x{input_size[1]}, "
+                    log_entry = (f"Resolution: {size[0]}x{size[1]}, "
                                  f"Processing time: {int(hours)} hr, {int(minutes)} min, {seconds:.2f} sec, "
                                  f"FPS: {fps:.2f}\n")
                     log_file.write(log_entry)

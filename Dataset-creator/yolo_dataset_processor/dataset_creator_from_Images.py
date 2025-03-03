@@ -60,14 +60,13 @@ class ImageAugmentations:
 class YoloProcessor:
     """Class to handle YOLO data processing, including augmentation and label management."""
 
-    def __init__(self, source_dir, train_split=0.8, val_split=0.15, test_split=0.05, factTimes=7,
-                 class_to_id=None, color_to_label='', dataset_saving_working_dir='', folder_name='', class_names='',
-                 mask_type_ext='.jpeg', mask_foulder_name='masks', FromDataType='', ToDataTypeFormate=''):
+    def __init__(self, config):
         try:
-            fullPath, dataset_folder = create_yolo_folders.create_yolo_folder_structure(folder_name=folder_name,
-                                                                                        main_path=dataset_saving_working_dir,
-                                                                                        num_classes=class_names)
-            print(f"Dataset folder structure created at: {fullPath}")
+            fullPath, dataset_folder = create_yolo_folders.create_yolo_folder_structure(
+                folder_name=config['folder_name'],
+                main_path=config['dataset_saving_working_dir'],
+                num_classes=config['class_names']
+            )
         except Exception as e:
             logging.error(f"Error creating YOLO folder structure: {e}")
             raise
@@ -76,28 +75,33 @@ class YoloProcessor:
         self.train_save_path = os.path.join(fullPath, 'train')
         self.val_save_path = os.path.join(fullPath, 'valid')
         self.test_save_path = os.path.join(fullPath, 'test')
-        self.mask_foulder_name = mask_foulder_name
-        self.ToDataTypeFormate = ToDataTypeFormate
+        self.mask_folder_name = config['mask_folder_name']
+        self.original_folder_name = config['original_folder_name']
+        self.ToDataTypeFormate = config['ToDataTypeFormate']
         self.augmenter = ImageAugmentations()
-        self.color_to_label = color_to_label
-        self.mask_type_ext = mask_type_ext
-        self.FromDataType = FromDataType
-        self.class_names = class_names
-        self.class_to_id = class_to_id
-        self.train_split = train_split
-        self.source_dir = source_dir
-        self.test_split = test_split
-        self.val_split = val_split
-        self.main_path = dataset_saving_working_dir
-        self.factTimes = factTimes
+        self.color_to_label = config['color_to_label']
+        self.mask_type_ext = config['mask_type_ext']
+        self.FromDataType = config['FromDataType']
+        self.class_names = config['class_names']
+        self.class_to_id = config['class_to_id']
+        self.train_split = config['train_split']
+        self.source_dir_original_img = config['dataset_path'] + "/" + self.original_folder_name
+        self.source_dir_mask_img = config['dataset_path'] + "/" + self.mask_folder_name
+        self.test_split = config['test_split']
+        self.val_split = config['val_split']
+        self.main_path = config['dataset_saving_working_dir']
+        self.factTimes = config['augment_times']
+        self.num_threads = config['num_threads']
 
-        if not os.path.exists(self.source_dir):
-            logging.error(f"Source directory '{self.source_dir}' does not exist.")
-            raise FileNotFoundError(f"Source directory '{self.source_dir}' not found.")
+        if not os.path.exists(self.source_dir_original_img) or not os.path.exists(self.source_dir_mask_img):
+            logging.error(
+                f"Source directories '{self.source_dir_original_img}' or '{self.source_dir_mask_img}' do not exist.")
+            raise FileNotFoundError(
+                f"Source directories '{self.source_dir_original_img}' or '{self.source_dir_mask_img}' not found.")
 
     def distribute_files_with_threads(self):
         """Distribute files into training, validation, and test sets using multithreading."""
-        image_paths = self.collect_image_paths()
+        image_paths = self.collect_image_paths(self.source_dir_original_img)
         if not image_paths:
             logging.error("No image files were found in the source directory.")
             return
@@ -113,7 +117,7 @@ class YoloProcessor:
         file_infos = [(os.path.basename(file_path)[:-4], file_path) for file_path in image_paths]
 
         with tqdm(total=total_files, desc="Processing Images") as pbar:
-            with ThreadPoolExecutor(max_workers=(os.cpu_count() - 8)) as executor:
+            with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
                 futures = [executor.submit(self.process_single_file, file_info, self.factTimes) for file_info in
                            file_infos]
                 for future in as_completed(futures):
@@ -123,19 +127,14 @@ class YoloProcessor:
                         logging.error(f"Exception during processing: {e}")
                     pbar.update(self.factTimes)
 
-        # with tqdm(total=total_files, desc="Processing Images") as pbar:
-        #     for file_info1 in file_infos:
-        #         self.process_single_file(file_info1, self.factTimes)
-        #         pbar.update(self.factTimes)
-
-    def collect_image_paths(self):
-        """Collect all image file paths from the source directory."""
+    def collect_image_paths(self, directory):
+        """Collect all image file paths from the given directory."""
         image_paths = []
-        for root, _, files in os.walk(self.source_dir):
+        for root, _, files in os.walk(directory):
             for filename in files:
                 if filename.lower().endswith(('.jpg', '.png', '.jpeg')):
                     image_paths.append(os.path.join(root, filename))
-        logging.info(f"Found {len(image_paths)} images in the source directory.")
+        logging.info(f"Found {len(image_paths)} images in the directory: {directory}.")
         return image_paths
 
     def process_single_file(self, file_info, Times):
@@ -149,7 +148,7 @@ class YoloProcessor:
 
     def get_label_path(self, image_source_path):
         """Construct the path for the label file based on the image path."""
-        label_path = (image_source_path.replace("images", self.mask_foulder_name)
+        label_path = (image_source_path.replace(self.original_folder_name, self.mask_folder_name)
                       ).replace(".png", self.mask_type_ext).replace('jpg', self.mask_type_ext)
         return label_path
 
@@ -289,19 +288,31 @@ class YoloProcessor:
 
 
 if __name__ == '__main__':
-    class_to_id = {
-        'road': 0,
+    CONFIG = {
+        "dataset_path": "D:\downloadFiles\\front_3\Dataset\\road",
+        "mask_folder_name": "MaskImages",  # Change if different
+        "original_folder_name": "OriginImages",  # Change if different
+        "dataset_saving_working_dir": 'dataset_saving_working_dir',
+        "augment_times": 1,  # Number of augmentations per image
+        "test_split": 0.1,  # Percentage of data for testing
+        "val_split": 0.1,  # Percentage of data for validation
+        "train_split": 0.8,  # Percentage of data for training
+        "num_threads": 4,  # Number of threads for parallel processing
+        "class_to_id": {
+            'road': 0,
+        },
+        "color_to_label": {
+            (0, 0, 255): 0,
+        },
+        "folder_name": 'road',
+        "class_names": ['road'],
+        "mask_type_ext": '.png',
+        "FromDataType": '',
+        "ToDataTypeFormate": '',
     }
-    color_to_id = {
-        (255, 255, 255): 0,
-    }
-    source_dir = r'I:\thippe\Working1\images'
-    dataset_saving_working_dir = r'F:\RunningProjects\YOLO_Model\DataSet\data'
+
     try:
-        processor = YoloProcessor(source_dir=source_dir, class_to_id=class_to_id, color_to_label=color_to_id,
-                                  dataset_saving_working_dir=dataset_saving_working_dir, factTimes=1,
-                                  folder_name='road2', class_names=list(class_to_id.keys()),
-                                  mask_type_ext='.png', FromDataType='', ToDataTypeFormate='')
+        processor = YoloProcessor(config=CONFIG)
         processor.distribute_files_with_threads()
     except Exception as e:
         logging.error(f"Critical error: {e}")

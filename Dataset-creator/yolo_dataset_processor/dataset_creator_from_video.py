@@ -3,6 +3,7 @@ import os
 import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
+import albumentations as A
 import cv2
 import numpy as np
 import torch
@@ -60,14 +61,13 @@ class ImageAugmentations:
 class YoloProcessor:
     """Class to handle YOLO data processing, including augmentation and label management."""
 
-    def __init__(self, original_video_path, mask_video_path, train_split=0.8, val_split=0.15, test_split=0.05,
-                 factTimes=7,
-                 class_to_id=None, color_to_label='', dataset_saving_working_dir='', folder_name='', class_names='',
-                 mask_type_ext='.jpeg', mask_foulder_name='masks', FromDataType='', ToDataTypeFormate=''):
+    def __init__(self, original_video_path, mask_video_path, config):
         try:
-            fullPath, dataset_folder = create_yolo_folders.create_yolo_folder_structure(folder_name=folder_name,
-                                                                                        main_path=dataset_saving_working_dir,
-                                                                                        num_classes=class_names)
+            fullPath, dataset_folder = create_yolo_folders.create_yolo_folder_structure(
+                folder_name=config['folder_name'],
+                main_path=config['dataset_saving_working_dir'],
+                num_classes=config['class_names']
+            )
             print(f"Dataset folder structure created at: {fullPath}")
         except Exception as e:
             logging.error(f"Error creating YOLO folder structure: {e}")
@@ -77,21 +77,22 @@ class YoloProcessor:
         self.train_save_path = os.path.join(fullPath, 'train')
         self.val_save_path = os.path.join(fullPath, 'valid')
         self.test_save_path = os.path.join(fullPath, 'test')
-        self.mask_foulder_name = mask_foulder_name
-        self.ToDataTypeFormate = ToDataTypeFormate
+        self.mask_foulder_name = config['mask_folder_name']
+        self.ToDataTypeFormate = config['ToDataTypeFormate']
         self.augmenter = ImageAugmentations()
-        self.color_to_label = color_to_label
-        self.mask_type_ext = mask_type_ext
-        self.FromDataType = FromDataType
-        self.class_names = class_names
-        self.class_to_id = class_to_id
-        self.train_split = train_split
+        self.color_to_label = config['color_to_label']
+        self.mask_type_ext = config['mask_type_ext']
+        self.FromDataType = config['FromDataType']
+        self.class_names = config['class_names']
+        self.class_to_id = config['class_to_id']
+        self.train_split = config['train_split']
         self.original_video_path = original_video_path
         self.mask_video_path = mask_video_path
-        self.test_split = test_split
-        self.val_split = val_split
-        self.main_path = dataset_saving_working_dir
-        self.factTimes = factTimes
+        self.test_split = config['test_split']
+        self.val_split = config['val_split']
+        self.main_path = config['dataset_saving_working_dir']
+        self.factTimes = config['augment_times']
+        self.augmentation_pipeline = get_augmentation_pipeline()
 
         if not os.path.exists(self.original_video_path):
             logging.error(f"Original video file '{self.original_video_path}' does not exist.")
@@ -189,27 +190,9 @@ class YoloProcessor:
         """Apply augmentations using PyTorch and return augmented image."""
         try:
             img = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-            if num == 1:
-                bright = [0.6, 0.9]
-                contrast = [0.6, 0.8]
-            elif num == 2:
-                bright = [0.65, 1.1]
-                contrast = [0.9, 1.1]
-            elif num == 3:
-                bright = [0.5, 0.9]
-                contrast = [0.9, 1.1]
-            elif num == 4:
-                bright = [0.8, 1.1]
-                contrast = [0.7, 0.8]
-            else:
-                bright = [0.7, 1.1]
-                contrast = [0.8, 1.1]
+            img_tensor = T.ToTensor()(img).to(device)
+            img_tensor = self.augmenter.apply_gaussian_blur(img_tensor)
 
-            augmentations = T.Compose([
-                T.ColorJitter(brightness=(bright[0], bright[1]), contrast=(contrast[0], contrast[1])),
-                T.ToTensor(),
-            ])
-            img_tensor = augmentations(img).to(device)
             if num % 5 == 1:
                 img_tensor = self.augmenter.apply_gaussian_blur(img_tensor)
             elif num % 5 == 2:
@@ -267,22 +250,47 @@ class YoloProcessor:
             logging.error(f"Error saving YOLO label file {save_label_path}: {e}")
 
 
+def get_augmentation_pipeline():
+    return A.Compose([
+        A.HorizontalFlip(p=0.5),
+        A.RandomBrightnessContrast(p=0.2),
+        A.GaussNoise(p=0.2),
+        A.Rotate(limit=10, p=0.5),
+        A.MotionBlur(p=0.2)
+    ], bbox_params=A.BboxParams(format='yolo', label_fields=['class_labels']))
+
+
 if __name__ == '__main__':
-    class_to_id = {
-        'road': 0,
+    CONFIG = {
+        "dataset_path": "D:/downloadFiles/front_3",
+        "output_path": "./Processed_Dataset",
+        "mask_folder_name": "MaskImages",  # Change if different
+        "image_folder_name": "OriginImages",  # Change if different
+        "augment_times": 3,  # Number of augmentations per image
+        "test_split": 0.1,  # Percentage of data for testing
+        "val_split": 0.1,  # Percentage of data for validation
+        "num_threads": 4,  # Number of threads for parallel processing
+        "class_to_id": {
+            'road': 0,
+        },
+        "color_to_label": {
+            (0, 0, 255): 0,
+        },
+        "train_split": 0.8,  # Percentage of data for training
+        "dataset_saving_working_dir": 'dataset_saving_working_dir',
+        "folder_name": 'road',
+        "class_names": ['road'],
+        "mask_type_ext": '.png',
+        "FromDataType": '',
+        "ToDataTypeFormate": '',
     }
-    color_to_id = {
-        (255, 255, 255): 0,
-    }
+
     original_video_path = r'../../Helper/originalVideoDataset1.mp4'
     mask_video_path = r'../../Helper/maskVideoDataset1.mp4'
-    dataset_saving_working_dir = r'dataset_saving_working_dir'
+
     try:
         processor = YoloProcessor(original_video_path=original_video_path, mask_video_path=mask_video_path,
-                                  class_to_id=class_to_id, color_to_label=color_to_id,
-                                  dataset_saving_working_dir=dataset_saving_working_dir, factTimes=1,
-                                  folder_name='road', class_names=list(class_to_id.keys()),
-                                  mask_type_ext='.png', FromDataType='', ToDataTypeFormate='')
+                                  config=CONFIG)
         processor.distribute_files_with_threads()
     except Exception as e:
         logging.error(f"Critical error: {e}")

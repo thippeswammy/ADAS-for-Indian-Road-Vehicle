@@ -2,8 +2,8 @@ import os
 import time
 
 import cv2
-import torch
 import numpy as np
+import torch
 from natsort import natsorted
 from ultralytics import YOLO
 
@@ -91,17 +91,13 @@ def run_yolo_segmentation_on_video(model, video_path, conf=0.5, display=True, sa
                             except cv2.error as e:
                                 print(f"Failed to draw polygon for class {cls_id}: {e}")
 
-        # overlayS = safe_area(overlay.copy(), vehiclePos)
-        # frameS = cv2.addWeighted(overlayS, transparency, frame, 1 - transparency, 0)
         frame = cv2.addWeighted(overlay, transparency, frame, 1 - transparency, 0)
         if save_path:
             out.write(frame)
-        # frameS = cv2.resize(frameS, (1080, 720))
         frame = cv2.resize(frame, (1080, 720))
 
         if display:
-            # cv2.imshow("YOLO Segmentation frameS", frameS)
-            cv2.imshow("YOLO Segmentation", frame)
+            cv2.imshow("Road Segmentation", frame)
             if cv2.waitKey(1) & 0xFF == ord('q'):
                 break
 
@@ -111,7 +107,7 @@ def run_yolo_segmentation_on_video(model, video_path, conf=0.5, display=True, sa
     cv2.destroyAllWindows()
 
 
-model_path = f'../Model/Road-seg/weights/best.pt'
+model_path = f'../Model/Road-seg/weights/best.pt'  # path for model
 video_path = r'C:\project\video'
 model = YOLO(model_path)
 if torch.cuda.is_available():
@@ -119,14 +115,13 @@ if torch.cuda.is_available():
     print(model.device)
 # cuda = 81.9609386920929
 # cpu = 74.12958312034607
-cv2.namedWindow("YOLO Segmentation", cv2.WINDOW_NORMAL)
-# cv2.namedWindow("YOLO Segmentation frameS", cv2.WINDOW_NORMAL)
+cv2.namedWindow("Road Segmentation", cv2.WINDOW_NORMAL)
 # List all files with their full paths
 for file_path in natsorted([os.path.join(video_path, file) for file in os.listdir(video_path)]):
     try:
         starting_time = time.time()
-        run_yolo_segmentation_on_video(model=model, conf=0.75, display=True, transparency=0.5,
-                                       video_path=file_path)
+        run_yolo_segmentation_on_video(model=model, conf=0.75, display=True,
+                                       transparency=0.5, video_path=file_path)
         print('time==>', (time.time() - starting_time))
     except Exception as e:
         print('video not found', e)

@@ -2,9 +2,6 @@ GPUtil
 matplotlib
 natsort
 numpy
-nvidia_ml_py
-opencv_contrib_python
-opencv_python
 panda
 Pillow
 psutil
@@ -12,16 +9,14 @@ pynvml
 tqdm
 pyopencl
 PyYAML
-scikit_learn
 seaborn
 skimage
 ultralytics
 tensorflow
-tensorflow_intel==2.12.0
+tensorflow-intel==2.12.0
 torch
 torchvision
 opencv-contrib-python
-opencv-python
 pandas
 scikit-learn
 scikit-image

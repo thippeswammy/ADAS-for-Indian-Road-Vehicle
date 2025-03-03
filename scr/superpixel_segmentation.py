@@ -1,7 +1,5 @@
 import cv2
-import numpy as np
 from matplotlib import pyplot as plt
-from skimage.color import rgb2gray
 from skimage.segmentation import mark_boundaries, slic, quickshift, felzenszwalb
 
 

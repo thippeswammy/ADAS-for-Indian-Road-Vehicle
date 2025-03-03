@@ -83,9 +83,9 @@ def main():
     print(f"Finished processing images.")
 
 
-images_dir = r'../Dataset-creator/yolo_dataset_processor/dataset_saving_working_dir/road/train/images'
-labels_dir = r'../Dataset-creator/yolo_dataset_processor/dataset_saving_working_dir/road/train/labels'
-output_dir = r'../Dataset-creator/yolo_dataset_processor/dataset_saving_working_dir/road/train/masks'
+images_dir = r'../DatasetCreator/YoloDatasetProcessor/dataset_saving_working_dir/road/train/images'
+labels_dir = r'../DatasetCreator/YoloDatasetProcessor/dataset_saving_working_dir/road/train/labels'
+output_dir = r'../DatasetCreator/YoloDatasetProcessor/dataset_saving_working_dir/road/train/masks'
 
 if __name__ == "__main__":
     main()

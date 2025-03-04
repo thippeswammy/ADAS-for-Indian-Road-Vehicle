@@ -92,6 +92,7 @@ class YoloProcessor:
         self.main_path = config['dataset_saving_working_dir']
         self.factTimes = config['augment_times']
         self.num_threads = config['num_threads']
+        self.keepValDatasetOriginal = config['Keep_val_dataset_original']
 
         if not os.path.exists(self.source_dir_original_img) or not os.path.exists(self.source_dir_mask_img):
             logging.error(
@@ -107,15 +108,15 @@ class YoloProcessor:
             return
 
         total_files = len(image_paths * self.factTimes)
-        if total_files / 10 > 10000:
-            self.val_split = 10000 / total_files
-            self.test_split = 1000 / total_files
+        # if total_files / 10 > 10000:
+        #     self.val_split = 10000 / total_files
+        #     self.test_split = 1000 / total_files
         self.test_image_count = int(total_files * self.test_split)
         self.val_image_count = int(total_files * self.val_split)
         self.train_image_count = total_files - self.test_image_count - self.val_image_count
 
         file_infos = [(os.path.basename(file_path)[:-4], file_path) for file_path in image_paths]
-
+        random.shuffle(file_infos)
         with tqdm(total=total_files, desc="Processing Images") as pbar:
             with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
                 futures = [executor.submit(self.process_single_file, file_info, self.factTimes) for file_info in
@@ -160,10 +161,8 @@ class YoloProcessor:
 
         label_source_path = self.get_label_path(image_source_path)
         if os.path.exists(label_source_path):
-            yolo_polygons_points_txt = ''
+            yolo_polygons_points_txt = self.process_mask_to_yolo_txt(label_source_path, self.class_to_id)
             for i in range(1, Times + 1):
-                if i == 1:
-                    yolo_polygons_points_txt = self.process_mask_to_yolo_txt(label_source_path, self.class_to_id)
                 save_img_path, save_label_path = self.get_destination_paths(file_name, i)
                 if save_img_path and save_label_path:
                     augmented_img = self.apply_augmentations(image_source_path, i)
@@ -188,7 +187,10 @@ class YoloProcessor:
             choices.append(1)
         elif self.test_image_count > 0:
             choices.append(2)
-        choice = random.choice(choices)
+        if self.keepValDatasetOriginal and num == 1:
+            choice = 1
+        else:
+            choice = random.choice(choices)
 
         if choice == 0:
             save_img_path = os.path.join(self.train_save_path, 'images', f'{file_name}_{num}.jpg')
@@ -206,6 +208,8 @@ class YoloProcessor:
 
     def apply_augmentations(self, source_img_path, num):
         """Apply augmentations using PyTorch and return augmented image."""
+        if self.keepValDatasetOriginal and num == 1:
+            return img
         try:
             img = Image.open(source_img_path).convert("RGB")
             if num == 1:
@@ -220,25 +224,30 @@ class YoloProcessor:
             elif num == 4:
                 bright = [0.8, 1.1]
                 contrast = [0.7, 0.8]
-            else:
+            elif num == 5:
                 bright = [0.7, 1.1]
                 contrast = [0.8, 1.1]
+            else:
+                bright = [0.99, 1.11]
+                contrast = [0.99, 1.11]
 
             augmentations = T.Compose([
                 T.ColorJitter(brightness=(bright[0], bright[1]), contrast=(contrast[0], contrast[1])),
                 T.ToTensor(),
             ])
             img_tensor = augmentations(img).to(device)
-            if num % 5 == 1:
+            if num % 6 == 0:
                 img_tensor = self.augmenter.apply_gaussian_blur(img_tensor)
-            elif num % 5 == 2:
+            elif num % 6 == 1:
                 img_tensor = self.augmenter.apply_average_blur(img_tensor)
-            elif num % 5 == 3:
+            elif num % 6 == 2:
                 img_tensor = self.augmenter.add_gaussian_noise(img_tensor, random.uniform(0, 0.5),
                                                                random.uniform(0.005, 0.04))
-            elif num % 5 == 4:
+            elif num % 6 == 3:
                 img_tensor = self.augmenter.add_salt_pepper_noise(img_tensor, random.uniform(0.005, 0.04),
                                                                   random.uniform(0.001, 0.05))
+            else:
+                return img
             return img_tensor
         except Exception as e:
             logging.error(f"Error applying augmentations on {source_img_path}: {e}")
@@ -295,9 +304,10 @@ if __name__ == '__main__':
         "dataset_saving_working_dir": 'dataset_saving_working_dir',
         "augment_times": 1,  # Number of augmentations per image
         "test_split": 0.1,  # Percentage of data for testing
-        "val_split": 0.1,  # Percentage of data for validation
-        "train_split": 0.8,  # Percentage of data for training
-        "num_threads": 4,  # Number of threads for parallel processing
+        "val_split": 0.001,  # Percentage of data for validation
+        "train_split": 0.899,  # Percentage of data for training
+        "Keep_val_dataset_original": True,
+        "num_threads": 8,  # Number of threads for parallel processing
         "class_to_id": {
             'road': 0,
         },

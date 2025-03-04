@@ -168,7 +168,10 @@ class YoloProcessor:
                     augmented_img = self.apply_augmentations(image_source_path, i)
                     if augmented_img is not None:
                         try:
-                            image_np = np.array(augmented_img.permute(1, 2, 0).cpu().numpy() * 255, dtype=np.uint8)
+                            if isinstance(augmented_img, torch.Tensor):
+                                image_np = np.array(augmented_img.permute(1, 2, 0).cpu().numpy() * 255, dtype=np.uint8)
+                            else:
+                                image_np = np.array(augmented_img)  # PIL Image to numpy array
                             image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
                             self.save_yolo_format(save_label_path, yolo_polygons_points_txt)
                             cv2.imwrite(save_img_path, image_np)
@@ -208,10 +211,11 @@ class YoloProcessor:
 
     def apply_augmentations(self, source_img_path, num):
         """Apply augmentations using PyTorch and return augmented image."""
-        if self.keepValDatasetOriginal and num == 1:
-            return img
+
         try:
             img = Image.open(source_img_path).convert("RGB")
+            if self.keepValDatasetOriginal and num == 1:
+                return img
             if num == 1:
                 bright = [0.6, 0.9]
                 contrast = [0.6, 0.8]

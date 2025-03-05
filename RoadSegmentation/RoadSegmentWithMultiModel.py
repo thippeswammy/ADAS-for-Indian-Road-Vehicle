@@ -42,12 +42,13 @@ CONFIG = {
     "vehicle_classes": [1, 2, 3, 5, 7, 24, 16, 0],
     "resolution_list": [[854, 480]],
     "confidence_threshold": 0.75,
-    "wantObjectMasks": False,
+    "wantObjectMasks": True,
     "save_output": False,
     "transparency": 0.5,
     "display": True,
-    "video_range": [15, 16],
+    "video_range": [2, 72],
 }
+SavingImageCount = 1
 
 
 def safe_area(overlay, vehicle_positions):
@@ -64,7 +65,7 @@ def safe_area(overlay, vehicle_positions):
 def process_video(models, video_path, conf, display, save_path, transparency, input_size):
     """Run YOLO segmentation on a video."""
     cap = cv2.VideoCapture(video_path)
-
+    global SavingImageCount
     if not cap.isOpened():
         print(f"Error: Unable to open video {video_path}")
         return 0  # No frames processed
@@ -92,7 +93,7 @@ def process_video(models, video_path, conf, display, save_path, transparency, in
                 frame = cv2.resize(frame, (input_size[0], input_size[1]))
 
             combined_overlay = np.zeros_like(frame, dtype=np.uint8)
-
+            TempFrame = frame.copy()
             for count, model in enumerate(models):
                 results = model.predict(frame, conf=conf, imgsz=(frame_width, frame_height))
                 for result in results:
@@ -100,12 +101,11 @@ def process_video(models, video_path, conf, display, save_path, transparency, in
                     if result.masks is not None:
                         for mask, box in zip(result.masks.xy, result.boxes):
                             cls_id = int(box.cls[0])
-                            if cls_id in CONFIG["vehicle_classes"] and cls_id < len(colors) and count >= len(
-                                    models) - 1:
+                            if cls_id in CONFIG["vehicle_classes"] and cls_id < len(colors) and count != 0:
                                 x_min, y_min, x_max, y_max = map(int, box.xyxy[0])
                                 vehicle_positions.append([x_min, y_min, x_max, y_max])
                                 cv2.rectangle(frame, (x_min, y_min), (x_max, y_max), colors[cls_id], 2)
-                            if (cls_id == 0 and count != len(models) - 1) or CONFIG["wantObjectMasks"]:
+                            if (cls_id == 0 and count == 0) or CONFIG["wantObjectMasks"]:
                                 points = np.int32(mask).reshape((-1, 1, 2))
                                 # Clamp points within image boundaries
                                 points[:, :, 0] = np.clip(points[:, :, 0], 0, frame_width - 1)
@@ -124,7 +124,11 @@ def process_video(models, video_path, conf, display, save_path, transparency, in
 
         if display:
             cv2.imshow("Road Vehicle Segmentation", blended_frame)
-            key = cv2.waitKey(1)
+            key = cv2.waitKey(1) & 0xFF
+            if key == ord('s'):
+                cv2.imwrite(f"{CONFIG['video_folder']}\\originalImages\\image{SavingImageCount}.png", TempFrame)
+                cv2.imwrite(f"{CONFIG['video_folder']}\\outputMask\\image{SavingImageCount}.png", blended_frame)
+                SavingImageCount = SavingImageCount + 1
             if key == ord('p'):  # Pause/unpause when "P" is pressed
                 paused = not paused
             elif key in [ord(str(i)) for i in range(1, 10)]:  # Frame skip based on "1-9"
@@ -141,7 +145,8 @@ def process_video(models, video_path, conf, display, save_path, transparency, in
 
 def run_processing(config):
     """Run the YOLO segmentation process for all videos."""
-    models = [YOLO(config["model1_path"]).to('cuda'), YOLO(config["model2_path"]).to('cuda')]
+    # models = [YOLO(config["model1_path"]).to('cuda'), YOLO(config["model2_path"]).to('cuda')]
+    models = [YOLO(config["model1_path"]).to('cuda')]
 
     log_entries = []
     start_all_time = time.time()

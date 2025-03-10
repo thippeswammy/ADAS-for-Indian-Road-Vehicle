@@ -1,5 +1,4 @@
 import os
-import random
 
 import cv2
 import numpy as np
@@ -97,8 +96,8 @@ def save_overlay_image(original_frame, modified_mask, segments_display, output_p
 
 
 def main():
-    original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\originalVideoDataset.mp4"
-    mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\maskVideoDataset.mp4"
+    original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\OriginalVideo.mp4"
+    mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\MaskVideo.mp4"
     output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImagesByMyModel\\SuperPixelMethods"
     val = ['any one pixel', 'majority pixel', 'varying superpixel pixel', 'with out superpixel pixel']
     output_dir = create_unique_folder(output_dir)
@@ -154,7 +153,8 @@ def main():
                                             interpolation=cv2.INTER_NEAREST)
                 modified_mask, segments_display = superpixels_methods(original_rgb, predicted_mask,
                                                                       n_segments, user_input)
-                difference = np.abs(predicted_mask - modified_mask)
+                difference_G_C = np.abs(ground_truth - modified_mask)
+                difference_G_P = np.abs(ground_truth - predicted_mask)
 
                 tp = np.sum((modified_mask == 1) & (ground_truth == 1))
                 tn = np.sum((modified_mask == 0) & (ground_truth == 0))
@@ -178,22 +178,24 @@ def main():
                     "FP": fp,
                     "FN": fn
                 })
-                os.makedirs(os.path.join(method_dir, "segments_images"), exist_ok=True)
                 os.makedirs(os.path.join(method_dir, "predicted_mask"), exist_ok=True)
                 os.makedirs(os.path.join(method_dir, "modified_mask"), exist_ok=True)
-                os.makedirs(os.path.join(method_dir, "difference_mask"), exist_ok=True)
+                os.makedirs(os.path.join(method_dir, "difference_mask_C"), exist_ok=True)
+                os.makedirs(os.path.join(method_dir, "difference_mask_P"), exist_ok=True)
+                os.makedirs(os.path.join(method_dir, "segments_images"), exist_ok=True)
+                os.makedirs(os.path.join(method_dir, "overlay"), exist_ok=True)
 
                 # Save images
-                cv2.imwrite(os.path.join(method_dir, "segments_images", f"segments_display_frame_{frame_idx}.png"),
-                            segments_display)
                 cv2.imwrite(os.path.join(method_dir, "predicted_mask", f"predicted_mask_frame_{frame_idx}.png"),
                             (predicted_mask * 255).astype(np.uint8))
                 cv2.imwrite(os.path.join(method_dir, "modified_mask", f"modified_mask_frame_{frame_idx}.png"),
                             (modified_mask * 255).astype(np.uint8))
-                cv2.imwrite(os.path.join(method_dir, "difference_mask", f"difference_frame_{frame_idx}.png"),
-                            (difference * 255).astype(np.uint8))
-                # Save overlay images for selected indices
-                os.makedirs(os.path.join(method_dir, "overlay"), exist_ok=True)
+                cv2.imwrite(os.path.join(method_dir, "difference_mask_C", f"difference_frame_{frame_idx}.png"),
+                            (difference_G_C * 255).astype(np.uint8))
+                cv2.imwrite(os.path.join(method_dir, "difference_mask_P", f"difference_frame_{frame_idx}.png"),
+                            (difference_G_P * 255).astype(np.uint8))
+                cv2.imwrite(os.path.join(method_dir, "segments_images", f"segments_display_frame_{frame_idx}.png"),
+                            segments_display)
                 overlay_path = os.path.join(method_dir, "overlay", f"overlay_frame_{frame_idx}.png")
                 save_overlay_image(original_frame, modified_mask, segments_display, overlay_path)
 
@@ -201,12 +203,12 @@ def main():
     # Save results to Excel
     results_df = pd.DataFrame(results)
     results_df.to_excel(excel_file, index=False)
-
     columns_to_average = results_df.columns[3:]
     grouped_averages = results_df.groupby(['methode', 'n_segments'])[columns_to_average].mean()
     grouped_averages.reset_index(inplace=True)
     output_file = excel_file[:5] + "Average.xlsx"
     grouped_averages.to_excel(output_file, index=False)
+
     original_cap.release()
     mask_cap.release()
     print("Processing completed.")

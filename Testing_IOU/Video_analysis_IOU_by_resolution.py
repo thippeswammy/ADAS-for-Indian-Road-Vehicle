@@ -8,58 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import psutil
-from skimage.segmentation import mark_boundaries, slic
 from ultralytics import YOLO
-
-
-def apply_superpixel_majority(image_rgb, mask_image):
-    # Ensure that mask_image is of integer type
-    mask_image = mask_image.astype(np.int32)  # Convert to integer type
-
-    # Process the image with superpixels
-    segments = slic(image_rgb, n_segments=10000, compactness=10, start_label=1)
-    # Convert segments to uint8 for display
-    segments_display = mark_boundaries(image_rgb, segments)
-    segments_display = (segments_display * 255).astype(np.uint8)
-
-    cv2.imshow("apply_superpixel_majority", segments_display)
-    cv2.imwrite("segments_display.png", segments_display)
-    cv2.waitKey(0)  # Adjust delay as needed (1ms here)
-    # fig, axes = plt.subplots(1, 1, figsize=(15, 15))
-    # axes.imshow(segments)
-    # plt.show()
-
-    modified_mask = np.zeros_like(mask_image)
-    for region_id in np.unique(segments):
-        # Create a mask for the current region
-        region_mask = (segments == region_id)
-        # Calculate the majority label within the region
-        majority_label = np.bincount(mask_image[region_mask].flatten()).argmax()  # Find the majority value
-        modified_mask[region_mask] = majority_label  # Assign the majority label to the region
-
-    # modified_mask = np.zeros_like(mask_image)
-    # for region_id in np.unique(segments):
-    #     # Create a mask for the current region
-    #     region_mask = (segments == region_id)
-    #
-    #     # Assign positive label if any pixel in the region is positive
-    #     if np.any(mask_image[region_mask] == 1):  # Check if there's any positive pixel
-    #         majority_label = 1
-    #     else:
-    #         majority_label = 0  # Assign negative label otherwise
-    #     # Assign the determined label to the region
-    #     modified_mask[region_mask] = majority_label
-    return modified_mask
-
-
-def superpixels_methods(image, mask_image):
-    # Convert the input image to RGB for skimage compatibility
-    image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-
-    # Process the superpixels based on majority color in mask image
-    majority_mask_image = apply_superpixel_majority(image_rgb, mask_image)
-
-    return majority_mask_image
 
 
 def get_gpu_memory():
@@ -80,16 +29,41 @@ def get_system_usage():
     return cpu_usage, ram_usage, gpu_usage
 
 
+def create_unique_folder(base_dir):
+    """
+    Create a unique folder. If the folder already exists, append a number to make it unique.
+    """
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+        return base_dir
+    else:
+        counter = 1
+        while True:
+            new_dir = f"{base_dir}_{counter}"
+            if not os.path.exists(new_dir):
+                os.makedirs(new_dir)
+                return new_dir
+            counter += 1
+
+
 # Paths
 original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\OriginalVideo.mp4"
 mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\MaskVideo.mp4"
-output_file = r"/Testing_IOU/Results/evaluation_results6_7.txt"
-excel_file = r"/Testing_IOU/Results/evaluation_results6_7.xlsx"
-output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImagesByMyModel\\"
+output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImagesByMyModel\\PredictedImages"
+output_dir = create_unique_folder(output_dir)
 
+os.makedirs(output_dir, exist_ok=True)
+excel_file = output_dir + "\\by_results.xlsx"
+print(output_dir)
 resolution_results = []
 image_sizes = [
-    (640, 480),
+    (640, 480), (854, 480),
+    # (500, 500), (800, 800), (1080, 1080),(1152, 768)
+    # (800, 600), (1024, 768), (1280, 960), (1600, 1200),
+    # (1280, 720), (1366, 768), (1920, 1080), (2560, 1440),
+    # (1280, 800), (1440, 900), (1680, 1050), (1920, 1200),
+    # (2560, 1080), (720, 480), (1080, 720), (1620, 1080),
+    # (2160, 1440), (1280, 1024), (800, 480), (854, 480),
 ]
 
 # Load YOLOv8 model
@@ -101,11 +75,11 @@ original_cap = cv2.VideoCapture(original_video_path)
 mask_cap = cv2.VideoCapture(mask_video_path)
 
 frame_count = int(original_cap.get(cv2.CAP_PROP_FRAME_COUNT))
-selected_indices = random.sample(range(frame_count), max(1, frame_count // 1))
+selected_indices = random.sample(range(frame_count), max(1, max(1, (frame_count // 100) * 5)))
 selected_indices = set(selected_indices)
 
 results_df = []
-
+yolo_model_img_reso = []
 # Evaluate for each resolution
 for width, height in image_sizes:
     output_dir_res = os.path.join(output_dir, f"{width}x{height}")
@@ -148,26 +122,14 @@ for width, height in image_sizes:
 
         if inference_results[0].masks is not None and inference_results[0].masks.data is not None:
             predicted_mask = inference_results[0].masks.data[0].cpu().numpy()
+            if not yolo_model_img_reso.__contains__(predicted_mask.shape):
+                yolo_model_img_reso.append(predicted_mask.shape)
         else:
             predicted_mask = np.zeros((width, height), dtype=np.uint8)
         predicted_mask = cv2.resize(predicted_mask, (width, height), interpolation=cv2.INTER_NEAREST)
-        modified_mask = superpixels_methods(original_resized, predicted_mask)
 
-        # Visualize the difference (you can display or save it)
-        cv2.imshow("predicted_mask", (predicted_mask * 255).astype(np.uint8))
-        cv2.imwrite("predicted_mask.png", (predicted_mask * 255).astype(np.uint8))
-        cv2.imshow("modified_mask", (modified_mask * 255).astype(np.uint8))
-        cv2.imwrite("modified_mask.png", (modified_mask * 255).astype(np.uint8))
-        difference = np.abs(predicted_mask - modified_mask)
-        difference_image = cv2.applyColorMap(difference.astype(np.uint8) * 255, cv2.COLORMAP_JET)
-        predicted_mask = (modified_mask > 0.5).astype(np.uint8)
-        cv2.imshow("Difference", difference_image)  # Display the difference
-        cv2.imwrite("Difference.png", difference_image)  # Display the difference
-        cv2.waitKey(0)  # Wait for keypress to close the image window
-        cv2.destroyAllWindows()
+        predicted_mask = (predicted_mask > 0.5).astype(np.uint8)
 
-        # Optionally save the difference image
-        # cv2.imwrite("difference_image.png", difference_image)
         # converted_image = np.zeros(
         #     (predicted_mask.shape[0], predicted_mask.shape[1], 3), dtype=np.uint8)
         # converted_image[ground_truth == 1] = [0, 0, 255]
@@ -176,6 +138,10 @@ for width, height in image_sizes:
         # print(predicted_mask.shape, ground_truth.shape, original_frame.shape)
 
         # Save overlay images for the selected 10%
+        intersection = np.sum((predicted_mask == 1) & (ground_truth == 1))
+        union = np.sum(predicted_mask) + np.sum(ground_truth) - intersection
+        iou = intersection / union if union > 0 else 0
+        total_iou += iou
         if frame_idx in selected_indices:
             overlay = original_resized.copy()
             overlay[(predicted_mask == 1) & (ground_truth == 1)] = [0, 255, 0]  # Green for true positives
@@ -186,6 +152,7 @@ for width, height in image_sizes:
                 "True Positive": (0, 255, 0),  # Green
                 "False Negative": (0, 0, 255),  # Red
                 "False Positive": (255, 0, 0),  # Blue
+                "IOU": (255, 255, 255),  # Blue
             }
             legend_start_x = 10
             legend_start_y = 10
@@ -193,12 +160,15 @@ for width, height in image_sizes:
             legend_spacing = 5
             for i, (label, color) in enumerate(legend_colors.items()):
                 y_position = legend_start_y + i * (legend_box_height + legend_spacing)
+                if label == "IOU":
+                    label = f"IOU={round(iou, 4)}"
+
                 # Draw the color box
                 cv2.rectangle(overlay,
                               (legend_start_x, y_position),
                               (legend_start_x + legend_box_height, y_position + legend_box_height),
                               color, -1)
-                # Add text next to the color box
+
                 cv2.putText(overlay,
                             label,
                             (legend_start_x + legend_box_height + 10, y_position + legend_box_height - 5),
@@ -211,13 +181,6 @@ for width, height in image_sizes:
             output_path = os.path.join(output_dir_res, f"overlay_frame_{frame_idx}.png")
             cv2.imwrite(output_path, overlay)
 
-        num_images_processed += 1
-        # Calculate metrics
-        intersection = np.sum((predicted_mask == 1) & (ground_truth == 1))
-        union = np.sum(predicted_mask) + np.sum(ground_truth) - intersection
-        iou = intersection / union if union > 0 else 0
-        total_iou += iou
-
         tp = intersection
         tn = np.sum((predicted_mask == 0) & (ground_truth == 0))
         fp = np.sum((predicted_mask == 1) & (ground_truth == 0))
@@ -229,8 +192,10 @@ for width, height in image_sizes:
         total_fn += fn
 
         frame_idx += 1
+        num_images_processed += 1
 
     # Calculate final metrics
+
     total_tp = total_tp / (idx + 1)
     total_tn = total_tn / (idx + 1)
     total_fp = total_fp / (idx + 1)
@@ -248,7 +213,7 @@ for width, height in image_sizes:
     total_time = end_time - start_time
 
     results_df.append({
-        "Resolution": f"{width}x{height}",
+        "Resolution": f"{width}x{height} => {yolo_model_img_reso[-1][0]}x{yolo_model_img_reso[-1][1]}",
         "Mean IoU": round(mean_iou, 4),
         "Precision": round(precision, 4),
         "Recall": round(recall, 4),
@@ -281,9 +246,9 @@ for width, height in image_sizes:
 
 # Save results to files
 results_df = pd.DataFrame(results_df)
-results_df.to_csv(output_file, index=False)
 results_df.to_excel(excel_file, index=False)
 
 # Release video resources
 original_cap.release()
 mask_cap.release()
+print(yolo_model_img_reso)

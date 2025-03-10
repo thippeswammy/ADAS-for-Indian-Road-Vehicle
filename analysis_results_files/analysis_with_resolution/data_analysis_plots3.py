@@ -9,7 +9,7 @@ file_path = r'D:\downloadFiles\front_3\TestingVideo\PredictedImagesByMyModel\Pre
 # Output directory for saving images
 output_dir = f"{file_path}/analysis"
 os.makedirs(output_dir, exist_ok=True)
-file_path = f"{file_path}/results6_6 - Copy.xlsx"
+file_path = f"{file_path}/ResolutionResults.xlsx"
 # Load the data
 data = pd.read_excel(file_path)
 
@@ -32,7 +32,7 @@ correlation_matrix = numeric_data.corr()
 sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", fmt=".2f")
 plt.title("Correlation Heatmap of All Metrics")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\correlation_heatmap.png", dpi=1000)
+plt.savefig(f"{output_dir}\\correlation_heatmap.png", dpi=300)
 
 # 2. Pair Plot for Relationships Between Metrics (converted to density plot)
 metrics = ['Mean IoU', 'Precision', 'Recall', 'F1-Score', 'Accuracy', 'Specificity']
@@ -42,7 +42,7 @@ plt.figure(figsize=(10, 6))
 sns.kdeplot(data=pairplot_data['Value'], shade=True, color='skyblue', lw=2)
 plt.title("Density Plot for Average Metrics")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\pairplot_metrics_density.png", dpi=1000)
+plt.savefig(f"{output_dir}\\pairplot_metrics_density.png", dpi=300)
 
 # 3. Distribution Plots for Selected Metrics (replaced with density plots)
 for metric in metrics:
@@ -53,7 +53,7 @@ for metric in metrics:
     plt.xticks(rotation=90)
     plt.ylabel("Density")
     plt.tight_layout()
-    plt.savefig(f"{output_dir}\\density_{metric.lower().replace(' ', '_')}.png", dpi=1000)
+    plt.savefig(f"{output_dir}\\density_{metric.lower().replace(' ', '_')}.png", dpi=300)
 
 # 4. Box Plots for Metrics by Resolution (replaced with density plots)
 plt.figure(figsize=(12, 8))
@@ -62,7 +62,7 @@ plt.title("Density Plot of Mean IoU")
 plt.xlabel("Mean IoU")
 plt.ylabel("Density")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\density_mean_iou.png", dpi=1000)
+plt.savefig(f"{output_dir}\\density_mean_iou.png", dpi=300)
 
 # 5. Heatmap for Metric Trends Across Resolutions (converted to density plots)
 trend_metrics = data[['Resolution', 'Mean IoU', 'Precision', 'Recall', 'F1-Score', 'Accuracy']]
@@ -71,7 +71,7 @@ plt.figure(figsize=(12, 8))
 sns.kdeplot(data=trend_metrics_melted['Value'], shade=True, color='skyblue', lw=2)
 plt.title("Density Plot for Metrics Across Resolutions")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\metric_trends_density.png", dpi=1000)
+plt.savefig(f"{output_dir}\\metric_trends_density.png", dpi=300)
 
 # 6. Stacked Bar Chart for TP, FP, TN, FN (unchanged)
 stack_data = data[['Resolution', 'Total TP', 'Total FP', 'Total TN', 'Total FN']]
@@ -82,7 +82,7 @@ plt.xlabel("Resolution")
 plt.xticks(rotation=90)
 plt.ylabel("Count")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\stacked_bar_tp_fp_tn_fn.png", dpi=1000)
+plt.savefig(f"{output_dir}\\stacked_bar_tp_fp_tn_fn.png", dpi=300)
 
 # 7. Line Plots for Time and Metrics (converted to density plot)
 metrics = ['Mean IoU', 'Precision', 'Recall', 'F1-Score', 'Accuracy']
@@ -94,7 +94,7 @@ for metric in metrics:
     plt.xticks(rotation=90)
     plt.ylabel(metric)
     plt.tight_layout()
-    plt.savefig(f"{output_dir}\\density_{metric.lower().replace(' ', '_')}_by_resolution.png", dpi=1000)
+    plt.savefig(f"{output_dir}\\density_{metric.lower().replace(' ', '_')}_by_resolution.png", dpi=300)
 
 # 8. Scatter Plots for Key Relationships (converted to density plot)
 fpr_fnr_data = data[['Resolution', 'FPR', 'FNR']].groupby('Resolution').mean().reset_index()
@@ -107,7 +107,7 @@ plt.ylabel("Density")
 plt.legend(title="Metrics")
 plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\density_fpr_fnr.png", dpi=1000)
+plt.savefig(f"{output_dir}\\density_fpr_fnr.png", dpi=300)
 
 # 9. Violin Plot for Metric Distributions (replaced with density plot)
 plt.figure(figsize=(12, 8))
@@ -117,7 +117,7 @@ plt.xlabel("Recall")
 plt.ylabel("Density")
 plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\density_recall.png", dpi=1000)
+plt.savefig(f"{output_dir}\\density_recall.png", dpi=300)
 
 # 10. Summary Statistics (converted to density plot)
 summary_stats = data.describe().transpose()
@@ -127,7 +127,7 @@ plt.title("Density Plot of Summary Statistics (Mean) of All Metrics")
 plt.ylabel("Density")
 plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\summary_statistics_density.png", dpi=1000)
+plt.savefig(f"{output_dir}\\summary_statistics_density.png", dpi=300)
 
 # 11. Best Mode Results (converted to density plot)
 best_mode = data.loc[data['Mean IoU'].idxmax()]
@@ -138,4 +138,4 @@ plt.title("Density Plot of Best Mode Results (Highest Mean IoU)")
 plt.xlabel("Mean IoU")
 plt.ylabel("Density")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\best_mode_density.png", dpi=1000)
+plt.savefig(f"{output_dir}\\best_mode_density.png", dpi=300)

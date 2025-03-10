@@ -11,7 +11,7 @@ file_path = r'D:\downloadFiles\front_3\TestingVideo\PredictedImagesByMyModel\Pre
 # Output directory for saving images
 output_dir = f"{file_path}/analysis"
 os.makedirs(output_dir, exist_ok=True)
-file_path = f"{file_path}/results6_6 - Copy.xlsx"
+file_path = f"{file_path}/ResolutionResults.xlsx"
 
 # Load the data
 data = pd.read_excel(file_path)

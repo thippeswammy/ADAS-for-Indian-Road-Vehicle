@@ -10,7 +10,7 @@ file_path = r'D:\downloadFiles\front_3\TestingVideo\PredictedImagesByMyModel\Pre
 # Output directory for saving images
 output_dir = f"{file_path}/analysis"
 os.makedirs(output_dir, exist_ok=True)
-file_path = f"{file_path}/results6_6 - Copy.xlsx"
+file_path = f"{file_path}/ResolutionResults.xlsx"
 # Load the data
 data = pd.read_excel(file_path)
 
@@ -37,7 +37,7 @@ correlation_matrix_unstacked = correlation_matrix_unstacked[
 sns.barplot(x="Correlation", y="Metric 1", hue="Metric 2", data=correlation_matrix_unstacked, palette="coolwarm")
 plt.title("Correlation Bar Plot of All Metrics")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\correlation_barplot.png", dpi=1000)
+plt.savefig(f"{output_dir}\\correlation_barplot.png", dpi=300)
 
 # 2. Pair Plot for Relationships Between Metrics (converted to bar plot for metrics)
 metrics = ['Mean IoU', 'Precision', 'Recall', 'F1-Score', 'Accuracy', 'Specificity']
@@ -48,7 +48,7 @@ sns.barplot(x="Metric", y="Value", data=pairplot_data, palette="husl")
 plt.title("Average Metrics Bar Plot")
 plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\pairplot_metrics_bar.png", dpi=1000)
+plt.savefig(f"{output_dir}\\pairplot_metrics_bar.png", dpi=300)
 
 # 3. Distribution Plots for Selected Metrics (converted to bar plot)
 for metric in metrics:
@@ -60,7 +60,7 @@ for metric in metrics:
     plt.xticks(rotation=90)
     plt.ylabel("Frequency")
     plt.tight_layout()
-    plt.savefig(f"{output_dir}\\distribution_{metric.lower().replace(' ', '_')}_bar.png", dpi=1000)
+    plt.savefig(f"{output_dir}\\distribution_{metric.lower().replace(' ', '_')}_bar.png", dpi=300)
 
 # 4. Box Plots for Metrics by Resolution (converted to bar plot)
 plt.figure(figsize=(12, 8))
@@ -70,7 +70,7 @@ plt.title("Bar Plot of Mean IoU by Resolution")
 plt.xticks(rotation=90)
 plt.ylabel("Mean IoU")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\barplot_mean_iou.png", dpi=1000)
+plt.savefig(f"{output_dir}\\barplot_mean_iou.png", dpi=300)
 
 # 5. Heatmap for Metric Trends Across Resolutions (converted to bar plot)
 trend_metrics = data[['Resolution', 'Mean IoU', 'Precision', 'Recall', 'F1-Score', 'Accuracy']]
@@ -80,7 +80,7 @@ sns.barplot(x="Resolution", y="Value", hue="Metric", data=trend_metrics_melted, 
 plt.title("Bar Plot for Metrics Across Resolutions")
 plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\metric_trends_barplot.png", dpi=1000)
+plt.savefig(f"{output_dir}\\metric_trends_barplot.png", dpi=300)
 
 # 6. Stacked Bar Chart for TP, FP, TN, FN (unchanged)
 stack_data = data[['Resolution', 'Total TP', 'Total FP', 'Total TN', 'Total FN']]
@@ -91,7 +91,7 @@ plt.xlabel("Resolution")
 plt.xticks(rotation=90)
 plt.ylabel("Count")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\stacked_bar_tp_fp_tn_fn.png", dpi=1000)
+plt.savefig(f"{output_dir}\\stacked_bar_tp_fp_tn_fn.png", dpi=300)
 
 # 7. Line Plots for Time and Metrics (converted to bar plot)
 metrics = ['Mean IoU', 'Precision', 'Recall', 'F1-Score', 'Accuracy']
@@ -103,7 +103,7 @@ for metric in metrics:
     plt.xticks(rotation=90)
     plt.ylabel(metric)
     plt.tight_layout()
-    plt.savefig(f"{output_dir}\\barplot_{metric.lower().replace(' ', '_')}_by_resolution.png", dpi=1000)
+    plt.savefig(f"{output_dir}\\barplot_{metric.lower().replace(' ', '_')}_by_resolution.png", dpi=300)
 
 # 8. Scatter Plots for Key Relationships (converted to bar plot)
 fpr_fnr_data = data[['Resolution', 'FPR', 'FNR']].groupby('Resolution').mean().reset_index()
@@ -116,7 +116,7 @@ plt.ylabel("Rate")
 plt.legend(title="Metrics")
 plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\barplot_fpr_fnr.png", dpi=1000)
+plt.savefig(f"{output_dir}\\barplot_fpr_fnr.png", dpi=300)
 
 # 9. Violin Plot for Metric Distributions (converted to bar plot)
 plt.figure(figsize=(12, 8))
@@ -127,7 +127,7 @@ plt.xlabel("Resolution")
 plt.ylabel("Recall")
 plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\barplot_recall.png", dpi=1000)
+plt.savefig(f"{output_dir}\\barplot_recall.png", dpi=300)
 
 # 10. Summary Statistics (converted to bar plot)
 summary_stats = data.describe().transpose()
@@ -137,7 +137,7 @@ plt.title("Summary Statistics (Mean) of All Metrics")
 plt.ylabel("Mean Value")
 plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\summary_statistics_bar.png", dpi=1000)
+plt.savefig(f"{output_dir}\\summary_statistics_bar.png", dpi=300)
 
 # 11. Best Mode Results (converted to bar plot)
 best_mode = data.loc[data['Mean IoU'].idxmax()]
@@ -148,7 +148,7 @@ plt.title("Best Mode Results (Highest Mean IoU)")
 plt.xlabel("Resolution")
 plt.ylabel("Value")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\best_mode_bar.png", dpi=1000)
+plt.savefig(f"{output_dir}\\best_mode_bar.png", dpi=300)
 
 # 12. Box Plots for Metrics by Resolution (converted to bar plot)
 plt.figure(figsize=(12, 8))
@@ -159,9 +159,9 @@ plt.xticks(rotation=90)
 plt.ylabel("Total Time (s)")
 plt.tight_layout()
 os.makedirs(output_dir, exist_ok=True)
-# plt.savefig(os.path.join(output_dir, "barplot_Total_Time.png"), dpi=1000)
+# plt.savefig(os.path.join(output_dir, "barplot_Total_Time.png"), dpi=300)
 
-plt.savefig(f"{output_dir}\\barplot_Total_Time.png", dpi=1000)
+plt.savefig(f"{output_dir}\\barplot_Total_Time.png", dpi=300)
 
 # 13. Box Plots for Metrics by Resolution (converted to bar plot)
 plt.figure(figsize=(12, 8))
@@ -171,7 +171,7 @@ plt.title("Bar Plot of Total TP by Resolution")
 plt.xticks(rotation=90)
 plt.ylabel("Total TP")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\barplot_Total_TP.png", dpi=1000)
+plt.savefig(f"{output_dir}\\barplot_Total_TP.png", dpi=300)
 
 # 14. Box Plots for Metrics by Resolution (converted to bar plot)
 plt.figure(figsize=(12, 8))
@@ -181,7 +181,7 @@ plt.title("Bar Plot of Total TN by Resolution")
 plt.xticks(rotation=90)
 plt.ylabel("Total TN")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\barplot_Total_TN.png", dpi=1000)
+plt.savefig(f"{output_dir}\\barplot_Total_TN.png", dpi=300)
 
 # 15. Box Plots for Metrics by Resolution (converted to bar plot)
 plt.figure(figsize=(12, 8))
@@ -191,7 +191,7 @@ plt.title("Bar Plot of Total TN by Resolution")
 plt.xticks(rotation=90)
 plt.ylabel("Total FN")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\barplot_Total_FN.png", dpi=1000)
+plt.savefig(f"{output_dir}\\barplot_Total_FN.png", dpi=300)
 
 # 16. Box Plots for Metrics by Resolution (converted to bar plot)
 plt.figure(figsize=(12, 8))
@@ -201,4 +201,4 @@ plt.title("Bar Plot of Total FP by Resolution")
 plt.xticks(rotation=90)
 plt.ylabel("Total FP")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\barplot_Total_FP.png", dpi=1000)
+plt.savefig(f"{output_dir}\\barplot_Total_FP.png", dpi=300)

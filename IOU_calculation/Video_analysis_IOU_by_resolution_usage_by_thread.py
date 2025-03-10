@@ -121,8 +121,8 @@ def process_frame(frame_idx, original_frame, mask_frame, width, height, model, o
     }
 
 
-original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\OriginalVideo.mp4"
-mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\MaskVideo.mp4"
+original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\originalVideoDataset.mp4"
+mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\maskVideoDataset.mp4"
 output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImagesByMyModel\\PredictedImages"
 
 output_dir = create_unique_folder(output_dir)
@@ -141,8 +141,7 @@ image_sizes = [
 ]
 
 # Load YOLOv8 model
-model = YOLO(
-    r'F:\\RunningProjects\\YOLO_Model\\Training\\runs\\segment\\RoadSegmentationForMyDataset9\\weights\\best.pt').cuda()
+model = YOLO('../Model/RoadSeg/weights/best.pt').cuda()
 
 # Video capture objects
 original_cap = cv2.VideoCapture(original_video_path)
@@ -192,18 +191,17 @@ for width, height in image_sizes:
             total_fn += result["fn"]
             total_iou += result["iou"]
 
-    # Calculate final metrics
-    result["tp"] = result["tp"] / frame_count
-    result["tn"] = result["tn"] / frame_count
-    result["fp"] = result["fp"] / frame_count
-    result["fn"] = result["fn"] / frame_count
-    result["iou"] = result["iou"] / frame_count
-    total_tp = result["tp"]
-    total_tn = result["tn"]
-    total_fp = result["fp"]
-    total_fn = result["fn"]
-    total_iou = result["iou"]
-
+        # Calculate final metrics
+        total_tp = total_tp / frame_count
+        total_tn = total_tn / frame_count
+        total_fp = total_fp / frame_count
+        total_fn = total_fn / frame_count
+        total_iou = total_iou / frame_count
+        # total_tp = result["tp"]
+        # total_tn = result["tn"]
+        # total_fp = result["fp"]
+        # total_fn = result["fn"]
+        # total_iou = result["iou"]
     precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
     recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0
     f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0

@@ -10,7 +10,7 @@ file_path = r'D:\downloadFiles\front_3\TestingVideo\PredictedImagesByMyModel\Pre
 # Output directory for saving images
 output_dir = f"{file_path}/analysis"
 os.makedirs(output_dir, exist_ok=True)
-file_path = f"{file_path}/results6_6 - Copy.xlsx"
+file_path = f"{file_path}/ResolutionResults.xlsx"
 # Load the data
 data = pd.read_excel(file_path)
 
@@ -33,13 +33,13 @@ correlation_matrix = numeric_data.corr()
 sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", fmt=".2f")
 plt.title("Correlation Heatmap of All Metrics")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\correlation_heatmap.png", dpi=1000)
+plt.savefig(f"{output_dir}\\correlation_heatmap.png", dpi=300)
 # plt.show()
 
 # 2. Pair Plot for Relationships Between Metrics
 sns.pairplot(data, hue="Resolution", palette="husl", diag_kind="kde", height=3)
 plt.suptitle("Pair Plot for Metric Relationships", y=1.02)
-plt.savefig(f"{output_dir}\\pairplot_metrics.png", dpi=1000)
+plt.savefig(f"{output_dir}\\pairplot_metrics.png", dpi=300)
 # plt.show()
 
 # 3. Distribution Plots for Selected Metrics
@@ -52,7 +52,7 @@ for metric in metrics:
     plt.xticks(rotation=90)
     plt.ylabel("Frequency")
     plt.tight_layout()
-    plt.savefig(f"{output_dir}\\distribution_{metric.lower().replace(' ', '_')}.png", dpi=1000)
+    plt.savefig(f"{output_dir}\\distribution_{metric.lower().replace(' ', '_')}.png", dpi=300)
     # plt.show()
 
 # 4. Box Plots for Metrics by Resolution
@@ -63,7 +63,7 @@ plt.xlabel("Resolution")
 plt.xticks(rotation=90)
 plt.ylabel("Mean IoU")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\boxplot_mean_iou.png", dpi=1000)
+plt.savefig(f"{output_dir}\\boxplot_mean_iou.png", dpi=300)
 # plt.show()
 
 # 5. Heatmap for Metric Trends Across Resolutions
@@ -73,7 +73,7 @@ plt.figure(figsize=(12, 8))
 sns.heatmap(trend_data, annot=True, cmap="Blues", fmt=".2f", linewidths=0.5)
 plt.title("Heatmap for Metrics Across Resolutions")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\metric_trends_heatmap.png", dpi=1000)
+plt.savefig(f"{output_dir}\\metric_trends_heatmap.png", dpi=300)
 # plt.show()
 
 # 6. Stacked Bar Chart for TP, FP, TN, FN
@@ -85,7 +85,7 @@ plt.xlabel("Resolution")
 plt.xticks(rotation=90)
 plt.ylabel("Count")
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\stacked_bar_tp_fp_tn_fn.png", dpi=1000)
+plt.savefig(f"{output_dir}\\stacked_bar_tp_fp_tn_fn.png", dpi=300)
 # plt.show()
 
 # 7. Line Plots for Time and Metrics
@@ -99,7 +99,7 @@ plt.ylabel("Value")
 plt.legend(title="Metrics")
 plt.grid(True)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\lineplot_metric_trends.png", dpi=1000)
+plt.savefig(f"{output_dir}\\lineplot_metric_trends.png", dpi=300)
 # plt.show()
 
 plt.figure(figsize=(12, 8))
@@ -110,7 +110,7 @@ plt.xticks(rotation=90)
 plt.ylabel("Total Time (seconds)")
 plt.grid(True)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\lineplot_total_time.png", dpi=1000)
+plt.savefig(f"{output_dir}\\lineplot_total_time.png", dpi=300)
 # plt.show()
 
 # 8. Scatter Plots for Key Relationships
@@ -122,7 +122,7 @@ plt.xticks(rotation=90)
 plt.ylabel("False Negative Rate (FNR)")
 plt.legend(title="Resolution", bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\scatter_fpr_fnr.png", dpi=1000)
+plt.savefig(f"{output_dir}\\scatter_fpr_fnr.png", dpi=300)
 # plt.show()
 
 # 9. Violin Plot for Metric Distributions
@@ -133,7 +133,7 @@ plt.xlabel("Resolution")
 plt.ylabel("Recall")
 plt.xticks(rotation=90)
 plt.tight_layout()
-plt.savefig(f"{output_dir}\\violinplot_recall.png", dpi=1000)
+plt.savefig(f"{output_dir}\\violinplot_recall.png", dpi=300)
 # plt.show()
 
 # 10. Summary Statistics

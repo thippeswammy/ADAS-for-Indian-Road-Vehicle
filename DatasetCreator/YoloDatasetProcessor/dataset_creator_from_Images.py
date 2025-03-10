@@ -310,13 +310,13 @@ if __name__ == '__main__':
         "test_split": 0.1,  # Percentage of data for testing
         "val_split": 0.001,  # Percentage of data for validation
         "train_split": 0.899,  # Percentage of data for training
-        "Keep_val_dataset_original": True,
-        "num_threads": 8,  # Number of threads for parallel processing
+        "Keep_val_dataset_original": True,  # for keeping the original dataset has original
+        "num_threads": os.cpu_count() - 2,  # Number of threads for parallel processing
         "class_to_id": {
             'road': 0,
         },
         "color_to_label": {
-            (0, 0, 255): 0,
+            (255, 255, 255): 0,
         },
         "folder_name": 'road',
         "class_names": ['road'],

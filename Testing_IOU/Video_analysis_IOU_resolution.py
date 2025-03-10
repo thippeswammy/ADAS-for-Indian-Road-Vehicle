@@ -26,13 +26,33 @@ def get_system_usage():
     return cpu_usage, ram_usage, 0
 
 
-# Paths
+def create_unique_folder(base_dir):
+    """
+    Create a unique folder. If the folder already exists, append a number to make it unique.
+    """
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+        return base_dir
+    else:
+        counter = 1
+        while True:
+            new_dir = f"{base_dir}_{counter}"
+            if not os.path.exists(new_dir):
+                os.makedirs(new_dir)
+                return new_dir
+            counter += 1
+
+
 original_image_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\TempImg"
 mask_image_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\TempMasks"
-output_file = r"/Testing_IOU\\Results\\evaluation_results6.txt"
-excel_file = r"/Testing_IOU\\Results\\evaluation_results6.xlsx"
 output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImages"
+
+output_dir = create_unique_folder(output_dir)
+
 os.makedirs(output_dir, exist_ok=True)
+
+output_file = output_dir + "\evaluation_results6_1.txt"
+excel_file = output_dir + "\evaluation_results6_1.xlsx"
 
 image_sizes = [
     # 4:3 Aspect Ratio
@@ -76,7 +96,6 @@ for width, height in image_sizes:
     mask_image_files = sorted([f for f in os.listdir(mask_image_dir) if f.endswith(('.png', '.jpg', '.jpeg'))])
 
     system_parameters = []
-
     for image_file, mask_file in zip(original_image_files, mask_image_files):
         image_path = os.path.join(original_image_dir, image_file)
         mask_path = os.path.join(mask_image_dir, mask_file)
@@ -95,43 +114,45 @@ for width, height in image_sizes:
 
         # Model inference
         inference_results = model(image_resized, imgsz=(width, height), task='segment', conf=0.8)
-        cpu, ram, gpu = get_system_usage()
-        system_parameters.append([cpu - cpu_start, ram - ram_start, gpu - gpu_start])
+
+        system_parameters.append([get_system_usage()])
 
         if inference_results[0].masks is not None and inference_results[0].masks.data is not None:
             predicted_mask = inference_results[0].masks.data[0].cpu().numpy()
-            predicted_mask = cv2.resize(predicted_mask, (width, height))
-            predicted_mask = (predicted_mask > 0.5).astype(np.uint8)
+        else:
+            predicted_mask = np.zeros((frame_height, frame_width), dtype=np.uint8)
+        predicted_mask = cv2.resize(predicted_mask, (width, height))
+        predicted_mask = (predicted_mask > 0.5).astype(np.uint8)
 
-            # Create overlay image
-            overlay = image_resized.copy()
-            # Calculate metrics
-            intersection = np.sum((predicted_mask == 1) & (ground_truth_binary == 1))  # Area of Overlap
-            union = np.sum(predicted_mask) + np.sum(ground_truth_binary) - intersection  # Area of Union
+        # Create overlay image
+        overlay = image_resized.copy()
+        # Calculate metrics
+        intersection = np.sum((predicted_mask == 1) & (ground_truth_binary == 1))  # Area of Overlap
+        union = np.sum(predicted_mask) + np.sum(ground_truth_binary) - intersection  # Area of Union
 
-            iou = intersection / union if union > 0 else 0  # IoU Calculation
-            total_iou += iou
+        iou = intersection / union if union > 0 else 0  # IoU Calculation
+        total_iou += iou
 
-            # Save overlay image
-            overlay[(predicted_mask == 1) & (ground_truth_binary == 1)] = [0, 255, 0]  # Green for true positives
-            overlay[(predicted_mask == 0) &
-                    (ground_truth_binary == 1)] = [0, 0, 255]  # Red for false negatives (missed detections)
-            overlay[(predicted_mask == 1) &
-                    (ground_truth_binary == 0)] = [255, 0, 0]  # Blue for false positives (incorrect predictions)
+        # Save overlay image
+        overlay[(predicted_mask == 1) & (ground_truth_binary == 1)] = [0, 255, 0]  # Green for true positives
+        overlay[(predicted_mask == 0) &
+                (ground_truth_binary == 1)] = [0, 0, 255]  # Red for false negatives (missed detections)
+        overlay[(predicted_mask == 1) &
+                (ground_truth_binary == 0)] = [255, 0, 0]  # Blue for false positives (incorrect predictions)
 
-            output_path = os.path.join(output_dir, f"overlay_{image_file}")
-            cv2.imwrite(output_path, overlay)
+        output_path = os.path.join(output_dir, f"overlay_{image_file}")
+        cv2.imwrite(output_path, overlay)
 
-            # Update confusion metrics
-            tp = intersection
-            tn = np.sum((predicted_mask == 0) & (ground_truth_binary == 0))
-            fp = np.sum((predicted_mask == 1) & (ground_truth_binary == 0))
-            fn = np.sum((predicted_mask == 0) & (ground_truth_binary == 1))
+        # Update confusion metrics
+        tp = intersection
+        tn = np.sum((predicted_mask == 0) & (ground_truth_binary == 0))
+        fp = np.sum((predicted_mask == 1) & (ground_truth_binary == 0))
+        fn = np.sum((predicted_mask == 0) & (ground_truth_binary == 1))
 
-            total_tp += tp
-            total_tn += tn
-            total_fp += fp
-            total_fn += fn
+        total_tp += tp
+        total_tn += tn
+        total_fp += fp
+        total_fn += fn
 
     # Average system parameters
     avg_cpu = np.mean([p[0] for p in system_parameters]) if system_parameters else 0

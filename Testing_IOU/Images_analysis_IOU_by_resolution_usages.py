@@ -29,17 +29,34 @@ def get_system_usage():
     return cpu_usage, ram_usage, gpu_usage
 
 
+def create_unique_folder(base_dir):
+    """
+    Create a unique folder. If the folder already exists, append a number to make it unique.
+    """
+    if not os.path.exists(base_dir):
+        os.makedirs(base_dir)
+        return base_dir
+    else:
+        counter = 1
+        while True:
+            new_dir = f"{base_dir}_{counter}"
+            if not os.path.exists(new_dir):
+                os.makedirs(new_dir)
+                return new_dir
+            counter += 1
+
+
 # Paths
 original_image_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\TempImg"
 mask_image_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\TempMasks"
-output_file = r"/Testing_IOU/Results/evaluation_results6_6.txt"
-excel_file = r"/Testing_IOU/Results/evaluation_results6_6.xlsx"
-output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImages\\"
-
+output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImagesByMyModel\\PredictedImages"
+output_dir = create_unique_folder(output_dir)
+output_file = f"{output_dir}/evaluation_results.txt"
+excel_file = f"{output_dir}/evaluation_results.xlsx"
 resolution_results = []
 image_sizes = [
     (640, 480),
-    # (480, 640),
+    (480, 640), (854, 640),
     # (800, 600), (1024, 768), (1280, 960), (1600, 1200), (2048, 1536),
     # (1280, 720), (1366, 768), (1920, 1080), (2560, 1440),
     # (1280, 800), (1440, 900), (1680, 1050), (1920, 1200),

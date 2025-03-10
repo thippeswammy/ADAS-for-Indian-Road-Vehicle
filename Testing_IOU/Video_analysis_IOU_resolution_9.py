@@ -36,7 +36,7 @@ summary_excel_file = r"/Testing_IOU\\Results\\summary_results_video7.xlsx"
 resolution_results = []
 image_sizes = [
     # 4:3 Aspect Ratio
-    (384, 480),
+    (384, 480), (654, 640),
     # (800, 600), (1024, 768), (1280, 960), (1600, 1200), (2048, 1536),
     # # 16:9 Aspect Ratio
     # (1280, 720), (1366, 768), (1920, 1080), (2560, 1440),

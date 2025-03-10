@@ -5,8 +5,8 @@ import numpy as np
 from ultralytics import YOLO
 
 # Paths to images and masks
-image_dir = r"D:\downloadFiles\front_3\TestingVideo\TempImg"
-mask_dir = r"D:\downloadFiles\front_3\TestingVideo\TempMasks"
+image_dir = r"D:\downloadFiles\front_3\Dataset\road\OriginImages"
+mask_dir = r"D:\downloadFiles\front_3\Dataset\road\MaskImages"
 
 # Load YOLOv8 model
 model = YOLO(

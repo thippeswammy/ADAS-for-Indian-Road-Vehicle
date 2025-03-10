@@ -47,8 +47,8 @@ def get_system_usage():
     return cpu_usage, ram_usage, gpu_usage
 
 
-original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\OriginalVideo.mp4"
-mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\MaskVideo.mp4"
+original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\originalVideoDataset.mp4"
+mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\maskVideoDataset.mp4"
 output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImagesByMyModel\\PredictedImages"
 
 output_dir = create_unique_folder(output_dir)
@@ -68,15 +68,14 @@ image_sizes = [
 ]
 
 # Load YOLOv8 model
-model = YOLO(
-    r'F:\\RunningProjects\\YOLO_Model\\Training\\runs\\segment\\RoadSegmentationForMyDataset9\\weights\\best.pt').cuda()
+model = YOLO('../Model/RoadSeg/weights/best.pt').cuda()
 
 # Video capture objects
 original_cap = cv2.VideoCapture(original_video_path)
 mask_cap = cv2.VideoCapture(mask_video_path)
 
 frame_count = int(original_cap.get(cv2.CAP_PROP_FRAME_COUNT))
-selected_indices = random.sample(range(frame_count), max(1, max(1, (frame_count // 100) * 5)))
+selected_indices = random.sample(range(frame_count), max(1, max(1, int((frame_count / 100) * 100))))
 selected_indices = set(selected_indices)
 
 results_df = []
@@ -196,6 +195,10 @@ for width, height in image_sizes:
         # if frame_idx > 2:
         #     break
     # Calculate final metrics
+    total_tp = total_tp / frame_idx
+    total_tn = total_tn / frame_idx
+    total_fp = total_fp / frame_idx
+    total_fn = total_fn / frame_idx
     precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
     recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0
     f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
@@ -211,11 +214,11 @@ for width, height in image_sizes:
     # Calculate additional metrics
     specificity = total_tn / (total_tn + total_fp) if (total_tn + total_fp) > 0 else 0
     dice_coefficient = 2 * total_tp / (2 * total_tp + total_fp + total_fn) if (
-                                                                                          2 * total_tp + total_fp + total_fn) > 0 else 0
+                                                                                      2 * total_tp + total_fp + total_fn) > 0 else 0
     mcc = ((total_tp * total_tn) - (total_fp * total_fn)) / (
-                ((total_tp + total_fp) * (total_tp + total_fn) * (total_tn + total_fp) * (total_tn + total_fn)) ** 0.5
-                ) if ((total_tp + total_fp) * (total_tp + total_fn) * (total_tn + total_fp) * (
-                total_tn + total_fn)) > 0 else 0
+            ((total_tp + total_fp) * (total_tp + total_fn) * (total_tn + total_fp) * (total_tn + total_fn)) ** 0.5
+    ) if ((total_tp + total_fp) * (total_tp + total_fn) * (total_tn + total_fp) * (
+            total_tn + total_fn)) > 0 else 0
     fpr = total_fp / (total_fp + total_tn) if (total_fp + total_tn) > 0 else 0
     fnr = total_fn / (total_fn + total_tp) if (total_fn + total_tp) > 0 else 0
 
@@ -324,7 +327,4 @@ mask_cap.release()
 print(yolo_model_img_reso)
 
 if __name__ == "__main__":
-    import Video_analysis6_9_2
-
     IOU_size6_9_2.main()
-

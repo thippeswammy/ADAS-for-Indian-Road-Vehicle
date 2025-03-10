@@ -97,8 +97,8 @@ def save_overlay_image(original_frame, modified_mask, segments_display, output_p
 
 
 def main():
-    original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\OriginalVideo.mp4"
-    mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\MaskVideo.mp4"
+    original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\originalVideoDataset.mp4"
+    mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\maskVideoDataset.mp4"
     output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImagesByMyModel\\SuperPixelMethods"
     val = ['any one pixel', 'majority pixel', 'varying superpixel pixel', 'with out superpixel pixel']
     output_dir = create_unique_folder(output_dir)
@@ -106,8 +106,7 @@ def main():
     excel_file = os.path.join(output_dir, "results.xlsx")
 
     # Load YOLO model
-    model = YOLO(
-        r"F:\\RunningProjects\\YOLO_Model\\Training\\runs\\segment\\RoadSegmentationForMyDataset9\\weights\\best.pt").cuda()
+    model = YOLO('../Model/RoadSeg/weights/best.pt').cuda()
 
     # Video capture objects
     original_cap = cv2.VideoCapture(original_video_path)
@@ -123,23 +122,14 @@ def main():
     n_segments_list = [i / 10 for i in range(1, 11)]
     results = []
     frame_idx = 0
-    selected_indices = random.sample(range(frame_count), max(1, (frame_count // 100) * 5))
-    selected_indices = [280, 281, 282, 283, 284, 285, 286, 287]
-    ii = 0 - 1
+    # selected_indices = random.sample(range(frame_count), max(1, (frame_count // 100) * 5))
     while True:
         ret_original, original_frame = original_cap.read()
         ret_mask, mask_frame = mask_cap.read()
-        print(ii)
-        ii += 1
 
         if not ret_original or not ret_mask:
             break
-        # ii=281+5 ==> fx=0+4, 285
-        if ii < 281:
-            continue
-        if ii > 287:
-            break
-        print(f"__{ii}__")
+
         original_frame = cv2.resize(original_frame, (frame_width, frame_height))
         mask_frame = cv2.resize(mask_frame, (frame_width, frame_height), interpolation=cv2.INTER_NEAREST)
 
@@ -188,35 +178,35 @@ def main():
                     "FP": fp,
                     "FN": fn
                 })
+                os.makedirs(os.path.join(method_dir, "segments_images"), exist_ok=True)
                 os.makedirs(os.path.join(method_dir, "predicted_mask"), exist_ok=True)
                 os.makedirs(os.path.join(method_dir, "modified_mask"), exist_ok=True)
                 os.makedirs(os.path.join(method_dir, "difference_mask"), exist_ok=True)
-                os.makedirs(os.path.join(method_dir, "segments_images"), exist_ok=True)
 
                 # Save images
+                cv2.imwrite(os.path.join(method_dir, "segments_images", f"segments_display_frame_{frame_idx}.png"),
+                            segments_display)
                 cv2.imwrite(os.path.join(method_dir, "predicted_mask", f"predicted_mask_frame_{frame_idx}.png"),
                             (predicted_mask * 255).astype(np.uint8))
                 cv2.imwrite(os.path.join(method_dir, "modified_mask", f"modified_mask_frame_{frame_idx}.png"),
                             (modified_mask * 255).astype(np.uint8))
                 cv2.imwrite(os.path.join(method_dir, "difference_mask", f"difference_frame_{frame_idx}.png"),
                             (difference * 255).astype(np.uint8))
-                cv2.imwrite(os.path.join(method_dir, "segments_images", f"segments_display_frame_{frame_idx}.png"),
-                            segments_display)
-
                 # Save overlay images for selected indices
-                # if frame_idx in selected_indices:
                 os.makedirs(os.path.join(method_dir, "overlay"), exist_ok=True)
                 overlay_path = os.path.join(method_dir, "overlay", f"overlay_frame_{frame_idx}.png")
                 save_overlay_image(original_frame, modified_mask, segments_display, overlay_path)
 
         frame_idx += 1
-        # if frame_idx > 2:
-        #     break
-
     # Save results to Excel
     results_df = pd.DataFrame(results)
     results_df.to_excel(excel_file, index=False)
 
+    columns_to_average = results_df.columns[3:]
+    grouped_averages = results_df.groupby(['methode', 'n_segments'])[columns_to_average].mean()
+    grouped_averages.reset_index(inplace=True)
+    output_file = excel_file[:5] + "Average.xlsx"
+    grouped_averages.to_excel(output_file, index=False)
     original_cap.release()
     mask_cap.release()
     print("Processing completed.")

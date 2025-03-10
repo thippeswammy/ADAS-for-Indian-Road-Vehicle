@@ -231,6 +231,10 @@ for width, height in image_sizes:
         frame_idx += 1
 
     # Calculate final metrics
+    total_tp = total_tp / (idx + 1)
+    total_tn = total_tn / (idx + 1)
+    total_fp = total_fp / (idx + 1)
+    total_fn = total_fn / (idx + 1)
     precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
     recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0
     f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0

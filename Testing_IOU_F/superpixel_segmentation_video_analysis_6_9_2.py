@@ -105,8 +105,7 @@ def main():
     excel_file = os.path.join(output_dir, "results.xlsx")
 
     # Load YOLO model
-    model = YOLO(
-        r"F:\\RunningProjects\\YOLO_Model\\Training\\runs\\segment\\RoadSegmentationForMyDataset9\\weights\\best.pt").cuda()
+    model = YOLO('../Model/RoadSeg/weights/best.pt').cuda()
 
     # Video capture objects
     original_cap = cv2.VideoCapture(original_video_path)
@@ -123,10 +122,6 @@ def main():
     results = []
     frame_idx = 0
     # selected_indices = random.sample(range(frame_count), max(1, (frame_count // 100) * 5))
-    # selected_indices = [13, 46, 51, 57, 63, 74, 108, 119, 120, 157, 162, 192, 242, 284, 285, 302, 313, 329, 370, 412,
-    #                     424, 438, 444, 465, 497, 546, 574, 604, 631, 637, 644, 648, 661, 673, 705, 715, 718, 738, 791,
-    #                     805, 809]
-
     while True:
         ret_original, original_frame = original_cap.read()
         ret_mask, mask_frame = mask_cap.read()
@@ -205,7 +200,6 @@ def main():
                 save_overlay_image(original_frame, modified_mask, segments_display, overlay_path)
 
         frame_idx += 1
-
     # Save results to Excel
     results_df = pd.DataFrame(results)
     results_df.to_excel(excel_file, index=False)

@@ -127,7 +127,7 @@ output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImagesByMyMode
 
 output_dir = create_unique_folder(output_dir)
 os.makedirs(output_dir, exist_ok=True)
-excel_file = output_dir + "\\by_results6_6.xlsx"
+excel_file = output_dir + "\\by_results.xlsx"
 
 resolution_results = []
 image_sizes = [
@@ -184,7 +184,6 @@ for width, height in image_sizes:
                 selected_indices, system_parameters))
 
             frame_idx += 1
-
         for future in futures:
             result = future.result()
             total_tp += result["tp"]
@@ -194,6 +193,17 @@ for width, height in image_sizes:
             total_iou += result["iou"]
 
     # Calculate final metrics
+    result["tp"] = result["tp"] / frame_count
+    result["tn"] = result["tn"] / frame_count
+    result["fp"] = result["fp"] / frame_count
+    result["fn"] = result["fn"] / frame_count
+    result["iou"] = result["iou"] / frame_count
+    total_tp = result["tp"]
+    total_tn = result["tn"]
+    total_fp = result["fp"]
+    total_fn = result["fn"]
+    total_iou = result["iou"]
+
     precision = total_tp / (total_tp + total_fp) if (total_tp + total_fp) > 0 else 0
     recall = total_tp / (total_tp + total_fn) if (total_tp + total_fn) > 0 else 0
     f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0

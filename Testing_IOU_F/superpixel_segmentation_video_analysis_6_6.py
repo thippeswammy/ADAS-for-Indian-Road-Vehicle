@@ -11,8 +11,6 @@ import psutil
 import seaborn as sns
 from ultralytics import YOLO
 
-import monitor_system_usage2
-
 
 def create_unique_folder(base_dir):
     """
@@ -49,24 +47,14 @@ def get_system_usage():
     return cpu_usage, ram_usage, gpu_usage
 
 
-original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\OriginalVideo.mp4"
-mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\MaskVideo.mp4"
+original_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\originalVideoDataset.mp4"
+mask_video_path = r"D:\\downloadFiles\\front_3\\TestingVideo\\maskVideoDataset.mp4"
 output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImagesByMyModel\\PredictedImages"
 
 output_dir = create_unique_folder(output_dir)
 os.makedirs(output_dir, exist_ok=True)
-excel_file = output_dir + "\\results6_6.xlsx"
+excel_file = output_dir + "\\results.xlsx"
 
-# image_sizes = [
-#     (640, 480),
-#     (100, 100), (200, 200), (300, 300), (400, 400),
-#     (500, 500), (800, 800), (1080, 1080), (1152, 768),
-#     (800, 600), (1024, 768), (1280, 960), (1600, 1200),
-#     (1280, 720), (1366, 768), (1920, 1080), (2560, 1440),
-#     (1280, 800), (1440, 900), (1680, 1050), (1920, 1200),
-#     (2560, 1080), (720, 480), (1080, 720), (1620, 1080),
-#     (2160, 1440), (1280, 1024), (800, 480), (854, 480),
-# ]
 image_sizes = [
     (640, 480),  # 4:3
     (100, 100), (200, 200), (300, 300), (400, 400),  # 1:1
@@ -90,8 +78,7 @@ image_sizes = [
 ]
 
 # Load YOLOv8 model
-model = YOLO(
-    r'F:\\RunningProjects\\YOLO_Model\\Training\\runs\\segment\\RoadSegmentationForMyDataset9\\weights\\best.pt').cuda()
+model = YOLO(r'../Model/RoadSeg/weights/best.pt').cuda()
 
 # Video capture objects
 original_cap = cv2.VideoCapture(original_video_path)

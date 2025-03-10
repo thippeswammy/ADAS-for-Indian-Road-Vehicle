@@ -32,14 +32,14 @@ def get_system_usage():
 # Paths
 original_image_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\TempImg"
 mask_image_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\TempMasks"
-output_file = r"/Testing_IOU/Results/evaluation_results6_6.txt"
-excel_file = r"/Testing_IOU/Results/evaluation_results6_6.xlsx"
+output_file = r"/Testing_IOU/Results/evaluation_results.txt"
+excel_file = r"/Testing_IOU/Results/evaluation_results.xlsx"
 output_dir = r"D:\\downloadFiles\\front_3\\TestingVideo\\PredictedImages\\"
 
 resolution_results = []
 image_sizes = [
     (640, 480),
-    # (480, 640),
+    (480, 640), (854, 640),
     # (800, 600), (1024, 768), (1280, 960), (1600, 1200), (2048, 1536),
     # (1280, 720), (1366, 768), (1920, 1080), (2560, 1440),
     # (1280, 800), (1440, 900), (1680, 1050), (1920, 1200),

@@ -93,7 +93,7 @@ To set up the project locally, follow these steps:
 ### Training the Model
 To train the YOLOv8-Seg model:
 ```bash
-python train.py --data dataset.yaml --cfg yolov8l-seg.yaml --weights weights/yolov8l-seg.pt --epochs 100 --batch-size 32
+python ./RoadSegmentation/RoadSegment.py --data dataset.yaml --cfg yolov8l-seg.yaml --weights weights/yolov8l-seg.pt --epochs 100 --batch-size 32
 ```
 
 ### Inference on Test Images

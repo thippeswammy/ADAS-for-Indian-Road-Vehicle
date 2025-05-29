@@ -75,24 +75,27 @@ class YoloProcessor:
         self.train_save_path = os.path.join(fullPath, 'train')
         self.val_save_path = os.path.join(fullPath, 'valid')
         self.test_save_path = os.path.join(fullPath, 'test')
-        self.mask_folder_name = config['mask_folder_name']
-        self.original_folder_name = config['original_folder_name']
+        self.SOURCE_img_type_ext = config['SOURCE_img_type_ext']
+        self.SOURCE_mask_type_ext = config['SOURCE_mask_type_ext']
+        self.SOURCE_mask_folder_name = config['SOURCE_mask_folder_name']
+        self.SOURCE_original_folder_name = config['SOURCE_original_folder_name']
         self.ToDataTypeFormate = config['ToDataTypeFormate']
         self.augmenter = ImageAugmentations()
         self.color_to_label = config['color_to_label']
-        self.mask_type_ext = config['mask_type_ext']
         self.FromDataType = config['FromDataType']
         self.class_names = config['class_names']
         self.class_to_id = config['class_to_id']
         self.train_split = config['train_split']
-        self.source_dir_original_img = config['dataset_path'] + "/" + self.original_folder_name
-        self.source_dir_mask_img = config['dataset_path'] + "/" + self.mask_folder_name
+        self.source_dir_original_img = config['dataset_path'] + "/" + self.SOURCE_original_folder_name
+        self.source_dir_mask_img = config['dataset_path'] + "/" + self.SOURCE_mask_folder_name
         self.test_split = config['test_split']
         self.val_split = config['val_split']
         self.main_path = config['dataset_saving_working_dir']
         self.factTimes = config['augment_times']
         self.num_threads = config['num_threads']
         self.keepValDatasetOriginal = config['Keep_val_dataset_original']
+        self.DESTINATION_img_type_ext = config['DESTINATION_img_type_ext']
+        self.DESTINATION_label_type_ext = config['DESTINATION_label_type_ext']
 
         if not os.path.exists(self.source_dir_original_img) or not os.path.exists(self.source_dir_mask_img):
             logging.error(
@@ -115,7 +118,8 @@ class YoloProcessor:
         self.val_image_count = int(total_files * self.val_split)
         self.train_image_count = total_files - self.test_image_count - self.val_image_count
 
-        file_infos = [(os.path.basename(file_path)[:-4], file_path) for file_path in image_paths]
+        len_ind = os.path.basename(image_paths[0]).index('.')
+        file_infos = [(os.path.basename(file_path)[:len_ind], file_path) for file_path in image_paths]
         random.shuffle(file_infos)
         with tqdm(total=total_files, desc="Processing Images") as pbar:
             with ThreadPoolExecutor(max_workers=self.num_threads) as executor:
@@ -127,8 +131,11 @@ class YoloProcessor:
                     except Exception as e:
                         logging.error(f"Exception during processing: {e}")
                     pbar.update(self.factTimes)
+        # for file_info in file_infos:
+        #     self.process_single_file(file_info, self.factTimes)
 
-    def collect_image_paths(self, directory):
+    @staticmethod
+    def collect_image_paths(directory):
         """Collect all image file paths from the given directory."""
         image_paths = []
         for root, _, files in os.walk(directory):
@@ -149,8 +156,9 @@ class YoloProcessor:
 
     def get_label_path(self, image_source_path):
         """Construct the path for the label file based on the image path."""
-        label_path = (image_source_path.replace(self.original_folder_name, self.mask_folder_name)
-                      ).replace(".png", self.mask_type_ext).replace('jpg', self.mask_type_ext)
+        label_path = (image_source_path.replace(self.SOURCE_original_folder_name, self.SOURCE_mask_folder_name)
+                      ).replace(".png", self.SOURCE_mask_type_ext).replace('.jpg', self.SOURCE_mask_type_ext).replace(
+            '.jpeg', self.SOURCE_mask_type_ext)
         return label_path
 
     def process_and_save(self, file_name, image_source_path, Times):
@@ -196,16 +204,22 @@ class YoloProcessor:
             choice = random.choice(choices)
 
         if choice == 0:
-            save_img_path = os.path.join(self.train_save_path, 'images', f'{file_name}_{num}.jpg')
-            save_label_path = os.path.join(self.train_save_path, 'labels', f'{file_name}_{num}.txt')
+            save_img_path = os.path.join(self.train_save_path, 'images',
+                                         f'{file_name}_{num}{self.DESTINATION_img_type_ext}')
+            save_label_path = os.path.join(self.train_save_path, 'labels',
+                                           f'{file_name}_{num}{self.DESTINATION_label_type_ext}')
             self.train_image_count -= 1
         elif choice == 1:
-            save_img_path = os.path.join(self.val_save_path, 'images', f'{file_name}_{num}.jpg')
-            save_label_path = os.path.join(self.val_save_path, 'labels', f'{file_name}_{num}.txt')
+            save_img_path = os.path.join(self.val_save_path, 'images',
+                                         f'{file_name}_{num}{self.DESTINATION_img_type_ext}')
+            save_label_path = os.path.join(self.val_save_path, 'labels',
+                                           f'{file_name}_{num}{self.DESTINATION_label_type_ext}')
             self.val_image_count -= 1
         elif choice == 2:
-            save_img_path = os.path.join(self.test_save_path, 'images', f'{file_name}_{num}.jpg')
-            save_label_path = os.path.join(self.test_save_path, 'labels', f'{file_name}_{num}.txt')
+            save_img_path = os.path.join(self.test_save_path, 'images',
+                                         f'{file_name}_{num}{self.DESTINATION_img_type_ext}')
+            save_label_path = os.path.join(self.test_save_path, 'labels',
+                                           f'{file_name}_{num}{self.DESTINATION_label_type_ext}')
             self.test_image_count -= 1
         return save_img_path, save_label_path
 
@@ -279,7 +293,8 @@ class YoloProcessor:
                     polygons.append((label, contour.reshape(-1, 2)))
         return polygons
 
-    def convert_polygons_to_yolo(self, img_width, img_height, polygons):
+    @staticmethod
+    def convert_polygons_to_yolo(img_width, img_height, polygons):
         """
         Convert polygon coordinates to YOLO format.
         """
@@ -289,7 +304,8 @@ class YoloProcessor:
             yolo_polygons.append((label, normalized_polygon))
         return yolo_polygons
 
-    def save_yolo_format(self, save_label_path, yolo_polygons):
+    @staticmethod
+    def save_yolo_format(save_label_path, yolo_polygons):
         """Save the YOLO formatted text to the specified path."""
         try:
             with open(save_label_path, 'a') as f:
@@ -302,14 +318,15 @@ class YoloProcessor:
 
 if __name__ == '__main__':
     CONFIG = {
-        "dataset_path": "D:\downloadFiles\\front_3\Dataset\\road",
-        "mask_folder_name": "MaskImages",  # Change if different
-        "original_folder_name": "OriginImages",  # Change if different
-        "dataset_saving_working_dir": 'dataset_saving_working_dir',
-        "augment_times": 1,  # Number of augmentations per image
-        "test_split": 0.1,  # Percentage of data for testing
-        "val_split": 0.001,  # Percentage of data for validation
-        "train_split": 0.899,  # Percentage of data for training
+        "dataset_path": r"F:\RunningProjects\SAM2\segment-anything-3\working_dir",
+        "SOURCE_mask_folder_name": "render",
+        "SOURCE_original_folder_name": "images",
+        "SOURCE_mask_type_ext": '.png',
+        "SOURCE_img_type_ext": '.jpeg',
+        "augment_times": 10,  # Number of augmentations per image
+        "test_split": 0.0,  # Percentage of data for testing
+        "val_split": 0.1,  # Percentage of data for validation
+        "train_split": 0.9,  # Percentage of data for training
         "Keep_val_dataset_original": True,  # for keeping the original dataset has original
         "num_threads": os.cpu_count() - 2,  # Number of threads for parallel processing
         "class_to_id": {
@@ -318,9 +335,11 @@ if __name__ == '__main__':
         "color_to_label": {
             (255, 255, 255): 0,
         },
+        "dataset_saving_working_dir": r'F:\RunningProjects\SAM2\DatasetManager',
         "folder_name": 'road',
         "class_names": ['road'],
-        "mask_type_ext": '.png',
+        "DESTINATION_img_type_ext": '.jpg',
+        "DESTINATION_label_type_ext": '.txt',
         "FromDataType": '',
         "ToDataTypeFormate": '',
     }

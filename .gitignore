@@ -171,3 +171,8 @@
 /road_segmentation_runs/RoadSegmentation_11_04_20256/val_batch0_pred.jpg
 /road_segmentation_runs/RoadSegmentation_11_04_20257/val_batch0_pred.jpg
 /yolov8s-seg.pt
+/temp1/confusion_matrix.pickle
+/temp1/confusion_matrix.png
+/temp1/confusion_matrix_percentages.pickle
+/temp1/confusion_matrix_percentages.png
+/temp1/roc_curve.png

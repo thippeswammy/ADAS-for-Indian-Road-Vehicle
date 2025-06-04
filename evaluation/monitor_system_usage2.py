@@ -1,4 +1,6 @@
+import os
 import time
+import threading
 
 import matplotlib.pyplot as plt
 import psutil
@@ -37,7 +39,11 @@ def monitor_system():
         memory_info = nvmlDeviceGetMemoryInfo(handle)
         total_gpu_memory = memory_info.total / 1024 ** 2  # in MB
         gpu_usage_dedicated = memory_info.used / 1024 ** 2  # in MB
-        gpu_usage_percentage = (gpu_usage_dedicated / total_gpu_memory) * 100
+        if total_gpu_memory > 0: # Avoid division by zero
+            gpu_usage_percentage = (gpu_usage_dedicated / total_gpu_memory) * 100
+        else:
+            gpu_usage_percentage = 0
+
 
     # Return usage percentages and total memory values
     return cpu_usage, ram_usage, gpu_usage_percentage,
@@ -85,7 +91,11 @@ def plot_and_save_results(system_parameters, width, height, output_dir):
     plt.annotate(text, xy=(0.02, 0.95), xycoords='axes fraction', fontsize=10,
                  bbox=dict(boxstyle="round,pad=0.3", edgecolor="black", facecolor="lightyellow"))
     # Save the plot to a PNG file
-    plt.savefig(output_dir, format='png')
+    # Ensure output directory exists if output_dir is a path with directory
+    output_file_path = output_dir
+    if os.path.dirname(output_file_path): # Check if it's a path with a directory
+        os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
+    plt.savefig(output_file_path, format='png')
     plt.close()
 
 

@@ -112,7 +112,7 @@ model = YOLO(model_path).to('cuda')
 # cuda = 81.9609386920929
 # cpu = 74.12958312034607
 cv2.namedWindow("YOLO Segmentation", cv2.WINDOW_NORMAL)
-for i in range(15, 16):
+for i in range(15, 30):
     print('=>' * 10, f"Processing video {i}", '<=' * 10)
     try:
         start_time = time.process_time()

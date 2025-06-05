@@ -12,7 +12,7 @@ def create_yolo_folder_structure(folder_name, main_path='', num_classes=None):
     if num_classes is None:
         num_classes = []
     if main_path == '':
-        main_path = '..'
+        main_path = '../../data_processing'
     while True:
         if folder_name == '':
             # print("folder_name is null")

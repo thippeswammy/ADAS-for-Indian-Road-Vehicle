@@ -54,7 +54,7 @@ Dataset statistics:
 This project is organized into several Python packages and directories:
 
 - **`data_processing/`**: Scripts and modules for dataset preparation, augmentation, and format conversion, especially for YOLO. Includes `YoloDatasetProcessor` for creating YOLO datasets.
-- **`training/`**: Contains scripts for model training, primarily `RoadSegment.py` for YOLOv8-Seg.
+- **`training/`**: Contains scripts for model training, primarily `train.py` for YOLOv8-Seg.
 - **`utils/`**: A package for common utility scripts and modules.
     - **`utils/dataset_helpers/`**: Utilities specifically for dataset manipulation (e.g., `CheckMaskFile.py`).
     - **`utils/evaluation/`**: Scripts and modules for model evaluation, IoU calculation, performance analysis, and system monitoring. Contains sub-packages like `analysis_with_resolution`, `analysis_with_super_pixel`, etc.
@@ -109,28 +109,23 @@ To set up the project locally, follow these steps:
 ---
 
 ## Usage
-### Training the Model
+### Running the Model
 To train the YOLOv8-Seg model:
 ```bash
-python -m training.RoadSegment --data dataset.yaml --cfg yolov8l-seg.yaml --weights weights/yolov8l-seg.pt --epochs 100 --batch-size 32
-# Alternatively, if running directly from the root and PYTHONPATH is set up:
-# python training/RoadSegment.py --data dataset.yaml --cfg yolov8l-seg.yaml --weights weights/yolov8l-seg.pt --epochs 100 --batch-size 32
+python -m training/train.py 
 ```
 
 ### Inference on Test Images
 To run inference on test images:
 ```bash
-python detect.py --source test_images/ --weights weights/yolov8l-seg.pt --conf 0.5
+python python RoadSegment/RoadSegment.py
 ```
-(Note: `detect.py` is a standard YOLOv8 script. Ensure it's available in your environment or adapt the command to your YOLOv8 setup.)
 
 ### Superpixel Segmentation
 To apply superpixel segmentation:
 ```bash
-python superpixel.py --method majority_pixel --n_segments 500
+python scr/different_type_superpixel_segmentation.py --method majority_pixel --n_segments 500
 ```
-(Note: The specific `superpixel.py` script is not in the root of this repository. Adapt this command to use scripts like `scr/different_type_superpixel_segmentation.py` or `utils/evaluation/superpixel_segmentation_video_analysis.py` based on your needs, or your own superpixel implementation.)
-
 ---
 
 ## Results

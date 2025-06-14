@@ -68,21 +68,21 @@ def process_video_in_parallel(video_path, output_dir, num_threads):
             for start_frame, end_frame in frame_ranges:
                 executor.submit(extract_frames_in_range, start_frame, end_frame, video_path, output_dir, progress_bar)
     time.sleep(0.2)
-    print(f"video{video_number}  => Extracted frames to '{output_dir}'")
+    print(f"video{video_path}  => Extracted frames to '{output_dir}'")
 
 
-def main(video_path):
+def video2images(video_path, output_images_dir):
     """Main function to manage the video processing."""
 
     # Create output directory and clear any existing files
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    os.makedirs(output_images_dir, exist_ok=True)
     # clear_output_directory(OUTPUT_DIR)
 
     # Start multithreaded frame extraction
-    process_video_in_parallel(video_path, OUTPUT_DIR, NUM_THREADS)
+    process_video_in_parallel(video_path, output_images_dir, NUM_THREADS)
 
 
 if __name__ == "__main__":
     VIDEO_PATH_TEMPLATE = r'D:\downloadFiles\front_3\video{}.mp4'
     OUTPUT_DIR = r'F:\images1'
-    main()
+    video2images(VIDEO_PATH_TEMPLATE, OUTPUT_DIR)

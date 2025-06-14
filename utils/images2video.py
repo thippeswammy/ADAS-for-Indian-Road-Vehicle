@@ -51,18 +51,17 @@ def create_video(image_paths, output_path, fps=30, batch_size=10):
     print(f"Video created successfully: {output_path}")
 
 
-def main():
-    # Set input and output directories
-    input_dir = r"D:\downloadFiles\front_3\MaskImages"
-    output_video_path = r"maskVideoDataset1.mp4"
-
+def image2video(inp_dir, output_video_dir):
     # Collect all image paths
-    image_paths = [os.path.join(input_dir, img) for img in os.listdir(input_dir) if
+    image_paths = [os.path.join(inp_dir, img) for img in os.listdir(inp_dir) if
                    img.endswith(('.png', '.jpg', '.jpeg'))]
 
     # Create a video from images
-    create_video(image_paths, output_video_path, batch_size=1)  # Adjust batch size as needed
+    create_video(image_paths, output_video_dir, batch_size=1)  # Adjust batch size as needed
 
 
 if __name__ == "__main__":
-    main()
+    # Set input and output directories
+    input_dir = r"D:\downloadFiles\front_3\MaskImages"
+    output_video_path = r"maskVideoDataset1.mp4"
+    image2video(input_dir, output_video_path)

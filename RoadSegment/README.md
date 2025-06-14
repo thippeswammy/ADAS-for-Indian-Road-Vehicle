@@ -5,11 +5,11 @@ This directory contains scripts for training road segmentation and object detect
 ## Main Training Script
 
 ### `RoadSegment.py`
-- **Purpose**: This is the primary script for training YOLO models (likely YOLOv8-Seg) for road segmentation and potentially other object detection tasks.
+- **Purpose**: This is the primary script for testing YOLO models (likely YOLOv8-Seg) for road segmentation and potentially other object detection tasks.
 - **Configuration**: Training is typically configured using command-line arguments.
 - **Usage Example** (as referenced in the main project README.md):
   ```bash
-  python training/RoadSegment.py --data path/to/dataset.yaml --cfg path/to/yolov8l-seg.yaml --weights path/to/weights/yolov8l-seg.pt --epochs 100 --batch-size 32
+  python training/RoadSegment.py
   ```
   *(Ensure `dataset.yaml`, model configuration `.yaml`, and pretrained weights `.pt` paths are correctly specified.)*
 
@@ -20,7 +20,7 @@ This directory contains scripts for training road segmentation and object detect
 - **Usage**: (Refer to script for details)
 
 ### `RoadSegmentWithMultiModel.py`
-- **Purpose**: May involve training or experimenting with multiple models simultaneously or in sequence.
+- **Purpose**: experimenting with multiple models simultaneously or in sequence.
 - **Usage**: (Refer to script for details)
 
 ### `RoadSegmentWithMultiModelMultiVideoSaver.py`

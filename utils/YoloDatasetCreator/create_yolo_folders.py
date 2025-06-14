@@ -1,7 +1,8 @@
+# create_yolo_folders.py
 import os
 
 
-def create_yolo_folder_structure(folder_name, base_path='', num_classes=None):
+def create_yolo_folder_structure(folder_name, main_path='', num_classes=None):
     """
     Create a YOLO folder structure with train, val, and test directories.
     Each directory contains images and labels subdirectories.
@@ -10,8 +11,8 @@ def create_yolo_folder_structure(folder_name, base_path='', num_classes=None):
     """
     if num_classes is None:
         num_classes = []
-    if base_path == '':
-        base_path = '..'
+    if main_path == '':
+        main_path = '../../data_processing'
     while True:
         if folder_name == '':
             # print("folder_name is null")
@@ -32,15 +33,15 @@ def create_yolo_folder_structure(folder_name, base_path='', num_classes=None):
             counter += 1
 
         os.makedirs(new_path)
-        return new_path
+        return new_path, new_name
 
     # Create the main dataset folder with a unique name
-    dataset_path = create_unique_folder(base_path, folder_name)
+    (dataset_path, new_file_name) = create_unique_folder(main_path, folder_name)
 
     # Create train, val, and test folders with unique names
-    train_path = create_unique_folder(dataset_path, 'train')
-    val_path = create_unique_folder(dataset_path, 'valid')
-    test_path = create_unique_folder(dataset_path, 'test')
+    train_path, _ = create_unique_folder(dataset_path, 'train')
+    val_path, _ = create_unique_folder(dataset_path, 'valid')
+    test_path, _ = create_unique_folder(dataset_path, 'test')
 
     # Create subdirectories for images and labels
     os.makedirs(os.path.join(train_path, 'images'), exist_ok=True)
@@ -67,14 +68,8 @@ names:
     else:
         yaml_content += f"  0: class0\n"
 
-    yaml_file_path = os.path.join(dataset_path, f"{folder_name}.yaml")
+    yaml_file_path = os.path.join(dataset_path, f"data.yaml")
     with open(yaml_file_path, 'w') as yaml_file:
         yaml_file.write(yaml_content)
 
-    # print(f"Folder structure created at: {dataset_path}")
-    # print(f"YAML file created at: {yaml_file_path}")
-
-    return folder_name, dataset_path
-
-
-create_yolo_folder_structure()
+    return dataset_path, new_file_name

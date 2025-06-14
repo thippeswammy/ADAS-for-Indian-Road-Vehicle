@@ -8,12 +8,13 @@ Advanced Driver Assistance Systems (ADAS) tailored for Indian road conditions. T
 1. [Project Overview](#project-overview)
 2. [Features](#features)
 3. [Dataset](#dataset)
-4. [Installation](#installation)
-5. [Usage](#usage)
-6. [Results](#results)
-7. [Contributing](#contributing)
-8. [License](#license)
-9. [Acknowledgements](#acknowledgements)
+4. [Project Structure](#project-structure)
+5. [Installation](#installation)
+6. [Usage](#usage)
+7. [Results](#results)
+8. [Contributing](#contributing)
+9. [License](#license)
+10. [Acknowledgements](#acknowledgements)
 
 ---
 
@@ -46,6 +47,24 @@ Dataset statistics:
 - **Training**: 80%
 - **Validation**: 10%
 - **Testing**: 10%
+
+---
+
+## Project Structure
+This project is organized into several Python packages and directories:
+
+- **`data_processing/`**: Scripts and modules for dataset preparation, augmentation, and format conversion, especially for YOLO. Includes `YoloDatasetProcessor` for creating YOLO datasets.
+- **`training/`**: Contains scripts for model training, primarily `train.py` for YOLOv8-Seg.
+- **`utils/`**: A package for common utility scripts and modules.
+    - **`utils/dataset_helpers/`**: Utilities specifically for dataset manipulation (e.g., `CheckMaskFile.py`).
+    - **`utils/evaluation/`**: Scripts and modules for model evaluation, IoU calculation, performance analysis, and system monitoring. Contains sub-packages like `analysis_with_resolution`, `analysis_with_super_pixel`, etc.
+- **`Model/`**: Contains model outputs, logs, and visualizations from training runs (e.g., `Model/RoadSeg/`).
+- **`ROC/`**: Scripts related to ROC curve generation.
+- **`scr/`**: Miscellaneous source scripts.
+- **`weights/`**: Intended for storing downloaded pretrained model weights (e.g., `yolov8l-seg.pt`).
+- **`dataset/`**: Intended for storing datasets in the structure required by training scripts.
+
+Many of these directories (like `utils`, `data_processing`, `training`, `utils/evaluation` and their subdirectories) are structured as Python packages, allowing for modular imports.
 
 ---
 
@@ -90,24 +109,23 @@ To set up the project locally, follow these steps:
 ---
 
 ## Usage
-### Training the Model
+### Running the Model
 To train the YOLOv8-Seg model:
 ```bash
-python ./RoadSegmentation/RoadSegment.py --data dataset.yaml --cfg yolov8l-seg.yaml --weights weights/yolov8l-seg.pt --epochs 100 --batch-size 32
+python -m training/train.py 
 ```
 
 ### Inference on Test Images
 To run inference on test images:
 ```bash
-python detect.py --source test_images/ --weights weights/yolov8l-seg.pt --conf 0.5
+python python RoadSegment/RoadSegment.py
 ```
 
 ### Superpixel Segmentation
 To apply superpixel segmentation:
 ```bash
-python superpixel.py --method majority_pixel --n_segments 500
+python scr/different_type_superpixel_segmentation.py --method majority_pixel --n_segments 500
 ```
-
 ---
 
 ## Results

@@ -10,3 +10,11 @@
 /yolov8s-seg.pt
 /yolov8x-seg.pt
 /Model/RoadSeg/weights/bestNew.pt
+/ultralytics
+/ultralytics11
+
+dataset/
+feature_maps/
+RoadSegment/
+training/
+*.pyc

@@ -318,12 +318,12 @@ class YoloProcessor:
 
 if __name__ == '__main__':
     CONFIG = {
-        "dataset_path": r"F:\RunningProjects\SAM2\segment-anything-3\working_dir",
-        "SOURCE_mask_folder_name": "render",
-        "SOURCE_original_folder_name": "images",
+        "dataset_path": r"I:\projects\DatasetAnnotation\road_data",
+        "SOURCE_mask_folder_name": "MaskImages",
+        "SOURCE_original_folder_name": "OriginImages",
         "SOURCE_mask_type_ext": '.png',
         "SOURCE_img_type_ext": '.jpeg',
-        "augment_times": 10,  # Number of augmentations per image
+        "augment_times": 2,  # Number of augmentations per image
         "test_split": 0.0,  # Percentage of data for testing
         "val_split": 0.1,  # Percentage of data for validation
         "train_split": 0.9,  # Percentage of data for training
@@ -335,7 +335,7 @@ if __name__ == '__main__':
         "color_to_label": {
             (255, 255, 255): 0,
         },
-        "dataset_saving_working_dir": r'F:\RunningProjects\SAM2\DatasetManager',
+        "dataset_saving_working_dir": r'F:\RunningProjects\ADAS-for-Indian-Road-Vehicle\dataset',
         "folder_name": 'road',
         "class_names": ['road'],
         "DESTINATION_img_type_ext": '.jpg',

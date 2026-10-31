@@ -4,7 +4,7 @@ import cv2
 from tqdm import tqdm
 
 
-def process_images(image_paths):
+def process_images(image_paths, resize=False):
     """Reads and processes a batch of images."""
     processed_images = []
     for image_path in image_paths:
@@ -14,10 +14,13 @@ def process_images(image_paths):
             if image is None:
                 print(f"Failed to load image: {image_path}")
                 continue
-
             # Process the image (e.g., resize)
-            processed_image = cv2.resize(image, (1920, 1080))
-            processed_images.append(processed_image)
+            if resize:
+                processed_image = cv2.resize(image, (1920, 1080))
+                processed_images.append(processed_image)
+            else:
+
+                processed_images.append(image)
         except Exception as e:
             print(f"Error processing image {image_path}: {e}")
     return processed_images
@@ -57,7 +60,7 @@ def image2video(inp_dir, output_video_dir):
                    img.endswith(('.png', '.jpg', '.jpeg'))]
 
     # Create a video from images
-    create_video(image_paths, output_video_dir, batch_size=1)  # Adjust batch size as needed
+    create_video(image_paths, output_video_dir, batch_size=10)  # Adjust batch size as needed
 
 
 if __name__ == "__main__":

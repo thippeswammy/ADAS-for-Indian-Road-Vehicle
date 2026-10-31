@@ -13,8 +13,10 @@
 /ultralytics
 /ultralytics11
 
+Model/
 dataset/
 feature_maps/
 RoadSegment/
 training/
 *.pyc
+.idea/vcs.xml
